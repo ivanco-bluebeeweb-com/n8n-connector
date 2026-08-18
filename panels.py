@@ -67,7 +67,7 @@ def _workflow_row(w) -> ui.UINode:
     status = "Active" if w.active else "Inactive"
     subtitle = f"{status}" + (f" · {w.tags}" if w.tags else "")
     return ui.Stack(direction="v", gap=1, children=[
-        ui.Text(w.title, variant="body", weight="medium"),
+        ui.Text(w.title, variant="body"),
         ui.Text(subtitle, variant="caption"),
     ])
 
@@ -146,7 +146,7 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
         header,
         _connected_card(f"Instance: {base_url}"),
         ui.Divider(),
-        ui.Text("Workflows", variant="subtitle", weight="medium"),
+        ui.Text("Workflows", variant="subtitle"),
         _workflows_section(workflows),
     ])
 
