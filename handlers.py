@@ -20,6 +20,20 @@ from schemas import (
     GetCredentialSchemaParams, CredentialSchema, CreateCredentialParams,
     DeleteCredentialParams,
     ListTagsParams, N8nTag, N8nTagList, CreateTagParams, DeleteTagParams,
+    UpdateTagParams,
+    GetWorkflowTagsParams, UpdateWorkflowTagsParams,
+    ListWorkflowVersionsParams, GetWorkflowVersionParams,
+    N8nWorkflowVersion, N8nWorkflowVersionList,
+    UnarchiveWorkflowParams, TransferWorkflowParams,
+    GetExecutionTagsParams, UpdateExecutionTagsParams,
+    GetCredentialParams, UpdateCredentialParams,
+    TestCredentialParams, CredentialTestResult, TransferCredentialParams,
+    ListVariablesParams, N8nVariable, N8nVariableList,
+    CreateVariableParams, UpdateVariableParams, DeleteVariableParams,
+    ListUsersParams, N8nUser, N8nUserList, CreateUsersParams,
+    GetUserParams, DeleteUserParams, ChangeUserRoleParams,
+    PullSourceControlParams, SourceControlPullResult,
+    GenerateAuditParams, AuditReport,
 )
 
 
@@ -80,6 +94,44 @@ def _credential_entity(c: dict) -> N8nCredential:
 def _tag_entity(t: dict) -> N8nTag:
     tid = str(t.get("id") or "")
     return N8nTag(id=tid, title=t.get("name") or tid, tag_id=tid)
+
+
+def _workflow_version_entity(v: dict) -> N8nWorkflowVersion:
+    vid = str(v.get("versionId") or v.get("id") or "")
+    return N8nWorkflowVersion(
+        id=vid,
+        title=v.get("name") or f"Version {vid}",
+        version_id=vid,
+        workflow_id=str(v.get("workflowId") or ""),
+        name=str(v.get("name") or ""),
+        autosaved=bool(v.get("autosaved")),
+        created_at=str(v.get("createdAt") or ""),
+    )
+
+
+def _variable_entity(v: dict) -> N8nVariable:
+    vid = str(v.get("id") or "")
+    project = v.get("project") or {}
+    return N8nVariable(
+        id=vid,
+        title=v.get("key") or vid,
+        key=str(v.get("key") or ""),
+        value=str(v.get("value") or ""),
+        project_name=str(project.get("name") or "") if isinstance(project, dict) else "",
+    )
+
+
+def _user_entity(u: dict) -> N8nUser:
+    uid = str(u.get("id") or u.get("email") or "")
+    return N8nUser(
+        id=uid,
+        title=u.get("email") or uid,
+        email=str(u.get("email") or ""),
+        first_name=str(u.get("firstName") or ""),
+        last_name=str(u.get("lastName") or ""),
+        role=str(u.get("role") or ""),
+        is_pending=bool(u.get("isPending")),
+    )
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -695,6 +747,26 @@ async def create_n8n_tag(ctx, params: CreateTagParams) -> ActionResult:
 
 
 @chat.function(
+    "update_n8n_tag",
+    "Rename a tag on your connected n8n instance.",
+    action_type="write",
+    data_model=N8nTag,
+    event="n8n-connector.update_tag",
+    effects=["n8n.tag.updated"],
+)
+async def update_n8n_tag(ctx, params: UpdateTagParams) -> ActionResult:
+    """Rename a tag via PATCH /tags/{id}."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        t = await nc.update_tag(ctx, base_url, api_key, params.tag_id, params.name)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(_tag_entity(t), summary=f"Tag renamed to '{params.name}'.")
+
+
+@chat.function(
     "delete_n8n_tag",
     "Permanently delete a tag from your connected n8n instance. Workflows "
     "keep working -- they just lose this tag.",
@@ -721,4 +793,566 @@ async def delete_n8n_tag(ctx, params: DeleteTagParams) -> ActionResult:
     return ActionResult.success(
         DeleteResult(deleted=True),
         summary=f"Tag {params.tag_id} deleted.",
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Workflow tags / versions / unarchive / transfer
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@chat.function(
+    "get_n8n_workflow_tags",
+    "Read the tags currently assigned to one n8n workflow.",
+    action_type="read",
+    chain_callable=True,
+    data_model=N8nTagList,
+)
+async def get_n8n_workflow_tags(ctx, params: GetWorkflowTagsParams) -> ActionResult:
+    """Read via GET /workflows/{id}/tags."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        rows = await nc.get_workflow_tags(ctx, base_url, api_key, params.workflow_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    items = [_tag_entity(t) for t in rows]
+    return ActionResult.success(N8nTagList(items=items), summary=f"{len(items)} tag(s) on workflow {params.workflow_id}.")
+
+
+@chat.function(
+    "update_n8n_workflow_tags",
+    "Replace the full set of tags assigned to one n8n workflow (pass every "
+    "tag id that should remain, not just the ones to add).",
+    action_type="write",
+    data_model=N8nTagList,
+    event="n8n-connector.update_workflow_tags",
+    effects=["n8n.workflow.tags_updated"],
+)
+async def update_n8n_workflow_tags(ctx, params: UpdateWorkflowTagsParams) -> ActionResult:
+    """Replace via PUT /workflows/{id}/tags."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        rows = await nc.update_workflow_tags(ctx, base_url, api_key, params.workflow_id, params.tag_ids)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    items = [_tag_entity(t) for t in rows]
+    return ActionResult.success(N8nTagList(items=items), summary=f"Workflow {params.workflow_id} now has {len(items)} tag(s).")
+
+
+@chat.function(
+    "list_n8n_workflow_versions",
+    "List the saved version history of one n8n workflow.",
+    action_type="read",
+    chain_callable=True,
+    data_model=N8nWorkflowVersionList,
+)
+async def list_n8n_workflow_versions(ctx, params: ListWorkflowVersionsParams) -> ActionResult:
+    """List via GET /workflows/{id}/history."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        rows = await nc.list_workflow_versions(ctx, base_url, api_key, params.workflow_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    items = [_workflow_version_entity(v) for v in rows]
+    return ActionResult.success(N8nWorkflowVersionList(items=items), summary=f"{len(items)} version(s).")
+
+
+@chat.function(
+    "get_n8n_workflow_version",
+    "Read one specific saved version of an n8n workflow in full.",
+    action_type="read",
+    chain_callable=True,
+    data_model=N8nWorkflowVersion,
+)
+async def get_n8n_workflow_version(ctx, params: GetWorkflowVersionParams) -> ActionResult:
+    """Read via GET /workflows/{id}/history/{versionId}."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        v = await nc.get_workflow_version(ctx, base_url, api_key, params.workflow_id, params.version_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(_workflow_version_entity(v), summary=f"Version {params.version_id}.")
+
+
+@chat.function(
+    "unarchive_n8n_workflow",
+    "Unarchive a previously archived n8n workflow, making it visible and editable again.",
+    action_type="write",
+    data_model=WorkflowActionResult,
+    event="n8n-connector.unarchive_workflow",
+    effects=["n8n.workflow.unarchived"],
+)
+async def unarchive_n8n_workflow(ctx, params: UnarchiveWorkflowParams) -> ActionResult:
+    """Unarchive via POST /workflows/{id}/unarchive."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        w = await nc.unarchive_workflow(ctx, base_url, api_key, params.workflow_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(
+        WorkflowActionResult(workflow_id=params.workflow_id, active=bool(w.get("active"))),
+        summary=f"Workflow {params.workflow_id} unarchived.",
+    )
+
+
+@chat.function(
+    "transfer_n8n_workflow",
+    "Move an n8n workflow to a different project (Enterprise/multi-project instances only).",
+    action_type="write",
+    data_model=WorkflowActionResult,
+    event="n8n-connector.transfer_workflow",
+    effects=["n8n.workflow.transferred"],
+)
+async def transfer_n8n_workflow(ctx, params: TransferWorkflowParams) -> ActionResult:
+    """Transfer via PUT /workflows/{id}/transfer."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        await nc.transfer_workflow(ctx, base_url, api_key, params.workflow_id, params.destination_project_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(
+        WorkflowActionResult(workflow_id=params.workflow_id, active=True),
+        summary=f"Workflow {params.workflow_id} transferred to project {params.destination_project_id}.",
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Execution tags
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@chat.function(
+    "get_n8n_execution_tags",
+    "Read the tags currently assigned to one n8n execution.",
+    action_type="read",
+    chain_callable=True,
+    data_model=N8nTagList,
+)
+async def get_n8n_execution_tags(ctx, params: GetExecutionTagsParams) -> ActionResult:
+    """Read via GET /executions/{id}/tags."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        rows = await nc.get_execution_tags(ctx, base_url, api_key, params.execution_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    items = [_tag_entity(t) for t in rows]
+    return ActionResult.success(N8nTagList(items=items), summary=f"{len(items)} tag(s) on execution {params.execution_id}.")
+
+
+@chat.function(
+    "update_n8n_execution_tags",
+    "Replace the full set of tags assigned to one n8n execution.",
+    action_type="write",
+    data_model=N8nTagList,
+    event="n8n-connector.update_execution_tags",
+    effects=["n8n.execution.tags_updated"],
+)
+async def update_n8n_execution_tags(ctx, params: UpdateExecutionTagsParams) -> ActionResult:
+    """Replace via PUT /executions/{id}/tags."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        rows = await nc.update_execution_tags(ctx, base_url, api_key, params.execution_id, params.tag_ids)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    items = [_tag_entity(t) for t in rows]
+    return ActionResult.success(N8nTagList(items=items), summary=f"Execution {params.execution_id} now has {len(items)} tag(s).")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Credentials -- get / update / test / transfer
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@chat.function(
+    "get_n8n_credential",
+    "Read one credential's metadata (name, type, timestamps) -- never its "
+    "secret field values, which n8n's API never returns after creation.",
+    action_type="read",
+    chain_callable=True,
+    data_model=N8nCredential,
+)
+async def get_n8n_credential(ctx, params: GetCredentialParams) -> ActionResult:
+    """Read via GET /credentials/{id}."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        c = await nc.get_credential(ctx, base_url, api_key, params.credential_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(_credential_entity(c), summary=f"Credential '{c.get('name')}'.")
+
+
+@chat.function(
+    "update_n8n_credential",
+    "Update a credential's name and/or its field values on your connected "
+    "n8n instance. WARNING: this stores sensitive data -- only use when you "
+    "trust the source of the new values.",
+    action_type="write",
+    data_model=N8nCredential,
+    event="n8n-connector.update_credential",
+    effects=["n8n.credential.updated"],
+)
+async def update_n8n_credential(ctx, params: UpdateCredentialParams) -> ActionResult:
+    """Update via PATCH /credentials/{id}."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        c = await nc.update_credential(
+            ctx, base_url, api_key, params.credential_id,
+            name=params.name, credential_type_name=params.credential_type_name,
+            data=params.data, is_partial_data=params.is_partial_data,
+        )
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(_credential_entity(c), summary=f"Credential {params.credential_id} updated.")
+
+
+@chat.function(
+    "test_n8n_credential",
+    "Test whether a credential's stored values still work against its "
+    "target service.",
+    action_type="read",
+    data_model=CredentialTestResult,
+)
+async def test_n8n_credential(ctx, params: TestCredentialParams) -> ActionResult:
+    """Test via POST /credentials/{id}/test."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        result = await nc.test_credential(ctx, base_url, api_key, params.credential_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    status = str(result.get("status") or "")
+    return ActionResult.success(
+        CredentialTestResult(id=params.credential_id, title=f"Test {params.credential_id}",
+                              status=status, message=str(result.get("message") or "")),
+        summary=f"Credential test: {status or 'done'}.",
+    )
+
+
+@chat.function(
+    "transfer_n8n_credential",
+    "Move a credential to a different project (Enterprise/multi-project instances only).",
+    action_type="write",
+    data_model=DeleteResult,
+    event="n8n-connector.transfer_credential",
+    effects=["n8n.credential.transferred"],
+)
+async def transfer_n8n_credential(ctx, params: TransferCredentialParams) -> ActionResult:
+    """Transfer via PUT /credentials/{id}/transfer."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        await nc.transfer_credential(ctx, base_url, api_key, params.credential_id, params.destination_project_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(
+        DeleteResult(deleted=False),
+        summary=f"Credential {params.credential_id} transferred to project {params.destination_project_id}.",
+    )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Variables -- full resource (list/create/update/delete)
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@chat.function(
+    "list_n8n_variables",
+    "List variables defined on your connected n8n instance -- named "
+    "key/value pairs any workflow can reference via $vars.",
+    action_type="read",
+    chain_callable=True,
+    data_model=N8nVariableList,
+)
+async def list_n8n_variables(ctx, params: ListVariablesParams) -> ActionResult:
+    """List via GET /variables."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        rows, next_cursor = await nc.list_variables(ctx, base_url, api_key, limit=params.limit, cursor=params.cursor or None)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    items = [_variable_entity(v) for v in rows]
+    summary = f"{len(items)} variable(s)."
+    if next_cursor:
+        summary += f" More available (cursor={next_cursor})."
+    return ActionResult.success(N8nVariableList(items=items), summary=summary)
+
+
+@chat.function(
+    "create_n8n_variable",
+    "Create a new instance-wide variable on your connected n8n instance.",
+    action_type="write",
+    data_model=N8nVariable,
+    event="n8n-connector.create_variable",
+    effects=["n8n.variable.created"],
+)
+async def create_n8n_variable(ctx, params: CreateVariableParams) -> ActionResult:
+    """Create via POST /variables."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        v = await nc.create_variable(ctx, base_url, api_key, params.key, params.value)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(_variable_entity(v), summary=f"Variable '{params.key}' created.")
+
+
+@chat.function(
+    "update_n8n_variable",
+    "Update an existing variable's value on your connected n8n instance.",
+    action_type="write",
+    data_model=N8nVariable,
+    event="n8n-connector.update_variable",
+    effects=["n8n.variable.updated"],
+)
+async def update_n8n_variable(ctx, params: UpdateVariableParams) -> ActionResult:
+    """Update via PUT /variables/{id}."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        v = await nc.update_variable(ctx, base_url, api_key, params.variable_id, params.value)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(_variable_entity(v), summary=f"Variable {params.variable_id} updated.")
+
+
+@chat.function(
+    "delete_n8n_variable",
+    "Permanently delete a variable from your connected n8n instance. "
+    "Workflows referencing it will get an empty value at runtime.",
+    action_type="write",
+    data_model=DeleteResult,
+    event="n8n-connector.delete_variable",
+    effects=["n8n.variable.deleted"],
+)
+async def delete_n8n_variable(ctx, params: DeleteVariableParams) -> ActionResult:
+    """Delete via DELETE /variables/{id}. Requires confirm=true."""
+    if not params.confirm:
+        return ActionResult.error(
+            "Deletion is permanent -- pass confirm=true to proceed.",
+            code="N8N_CONFIRM_REQUIRED",
+        )
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        await nc.delete_variable(ctx, base_url, api_key, params.variable_id)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(DeleteResult(deleted=True), summary=f"Variable {params.variable_id} deleted.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Users -- full resource. Only relevant for multi-user/Enterprise instances.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@chat.function(
+    "list_n8n_users",
+    "List users on your connected n8n instance. Only meaningful on "
+    "multi-user (Enterprise) instances -- self-hosted single-owner "
+    "instances will just show the one owner account.",
+    action_type="read",
+    chain_callable=True,
+    data_model=N8nUserList,
+)
+async def list_n8n_users(ctx, params: ListUsersParams) -> ActionResult:
+    """List via GET /users."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        rows, next_cursor = await nc.list_users(
+            ctx, base_url, api_key, limit=params.limit, cursor=params.cursor or None,
+            include_role=params.include_role,
+        )
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    items = [_user_entity(u) for u in rows]
+    summary = f"{len(items)} user(s)."
+    if next_cursor:
+        summary += f" More available (cursor={next_cursor})."
+    return ActionResult.success(N8nUserList(items=items), summary=summary)
+
+
+@chat.function(
+    "create_n8n_users",
+    "Invite one or more new users to your connected n8n instance by email. "
+    "Enterprise feature -- fails on Community edition instances.",
+    action_type="write",
+    data_model=N8nUserList,
+    event="n8n-connector.create_users",
+    effects=["n8n.user.invited"],
+)
+async def create_n8n_users(ctx, params: CreateUsersParams) -> ActionResult:
+    """Invite via POST /users."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        rows = await nc.create_users(ctx, base_url, api_key, params.invites)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    items = [_user_entity(u) for u in rows]
+    return ActionResult.success(N8nUserList(items=items), summary=f"{len(items)} user(s) invited.")
+
+
+@chat.function(
+    "get_n8n_user",
+    "Read one user's profile on your connected n8n instance, by id or email.",
+    action_type="read",
+    chain_callable=True,
+    data_model=N8nUser,
+)
+async def get_n8n_user(ctx, params: GetUserParams) -> ActionResult:
+    """Read via GET /users/{idOrEmail}."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        u = await nc.get_user(ctx, base_url, api_key, params.id_or_email, include_role=params.include_role)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(_user_entity(u), summary=f"User '{u.get('email')}'.")
+
+
+@chat.function(
+    "delete_n8n_user",
+    "Permanently delete a user from your connected n8n instance. Their "
+    "workflows and credentials are NOT deleted -- transfer ownership first "
+    "if needed.",
+    action_type="write",
+    data_model=DeleteResult,
+    event="n8n-connector.delete_user",
+    effects=["n8n.user.deleted"],
+)
+async def delete_n8n_user(ctx, params: DeleteUserParams) -> ActionResult:
+    """Delete via DELETE /users/{idOrEmail}. Requires confirm=true."""
+    if not params.confirm:
+        return ActionResult.error(
+            "Deletion is permanent -- pass confirm=true to proceed.",
+            code="N8N_CONFIRM_REQUIRED",
+        )
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        await nc.delete_user(ctx, base_url, api_key, params.id_or_email)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(DeleteResult(deleted=True), summary=f"User {params.id_or_email} deleted.")
+
+
+@chat.function(
+    "change_n8n_user_role",
+    "Change a user's global role on your connected n8n instance (e.g. "
+    "'global:admin', 'global:member').",
+    action_type="write",
+    data_model=N8nUser,
+    event="n8n-connector.change_user_role",
+    effects=["n8n.user.role_changed"],
+)
+async def change_n8n_user_role(ctx, params: ChangeUserRoleParams) -> ActionResult:
+    """Change via PATCH /users/{id}/role."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        u = await nc.change_user_role(ctx, base_url, api_key, params.id_or_email, params.new_role_name)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    return ActionResult.success(_user_entity(u), summary=f"User {params.id_or_email} role changed to {params.new_role_name}.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Source control / Audit
+# ──────────────────────────────────────────────────────────────────────────
+
+
+@chat.function(
+    "pull_n8n_source_control",
+    "Pull the latest changes from the connected remote Git repository into "
+    "your n8n instance (Environments/Source Control feature -- Enterprise).",
+    action_type="write",
+    data_model=SourceControlPullResult,
+    event="n8n-connector.pull_source_control",
+    effects=["n8n.source_control.pulled"],
+)
+async def pull_n8n_source_control(ctx, params: PullSourceControlParams) -> ActionResult:
+    """Pull via POST /source-control/pull."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        result = await nc.pull_source_control(ctx, base_url, api_key, force=params.force)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    variables = result.get("variables") or {}
+    credentials = result.get("credentials") or []
+    workflows = result.get("workflows") or []
+    tags = result.get("tags") or {}
+    summary = (
+        f"Pulled: {len(workflows)} workflow(s), {len(credentials)} credential(s), "
+        f"{len(variables.get('added', []) if isinstance(variables, dict) else [])} variable change(s)."
+    )
+    return ActionResult.success(
+        SourceControlPullResult(
+            workflows_count=len(workflows),
+            credentials_count=len(credentials),
+            variables_count=len(variables) if isinstance(variables, list) else len(variables.get("added", []) if isinstance(variables, dict) else []),
+            tags_count=len(tags) if isinstance(tags, list) else 0,
+        ),
+        summary=summary,
+    )
+
+
+@chat.function(
+    "generate_n8n_audit",
+    "Generate a security audit report for your connected n8n instance -- "
+    "flags risky nodes, exposed credentials, outdated workflows, and more.",
+    action_type="read",
+    data_model=AuditReport,
+)
+async def generate_n8n_audit(ctx, params: GenerateAuditParams) -> ActionResult:
+    """Generate via POST /audit."""
+    base_url, api_key = await _get_credentials(ctx)
+    if not (base_url and api_key):
+        return _not_connected()
+    try:
+        report = await nc.generate_audit(
+            ctx, base_url, api_key,
+            days_abandoned_workflow=params.days_abandoned_workflow,
+            categories=params.categories or None,
+        )
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), code=exc.code)
+    import json as _json
+    return ActionResult.success(
+        AuditReport(report_json=_json.dumps(report)),
+        summary="Security audit generated.",
     )

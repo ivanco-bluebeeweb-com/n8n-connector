@@ -2872,6 +2872,121 @@
       "owner_chat_tool": "n8n-connector"
     },
     {
+      "name": "update_n8n_tag",
+      "description": "Rename a tag on your connected n8n instance.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.tag.updated"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "tag_id": {
+            "description": "n8n tag id to rename (see list_tags).",
+            "title": "Tag Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "New name for the tag.",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag_id",
+          "name"
+        ],
+        "title": "UpdateTagParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "tag_id": {
+            "default": "",
+            "title": "Tag Id",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "title": "N8nTag",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.update_tag",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
       "name": "delete_n8n_tag",
       "description": "Permanently delete a tag from your connected n8n instance. Workflows keep working -- they just lose this tag.",
       "action_type": "write",
@@ -2976,6 +3091,3120 @@
         "x-sdl": "entity"
       },
       "event": "n8n-connector.delete_tag",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "get_n8n_workflow_tags",
+      "description": "Read the tags currently assigned to one n8n workflow.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "workflow_id": {
+            "description": "n8n workflow id (see list_workflows).",
+            "title": "Workflow Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workflow_id"
+        ],
+        "title": "GetWorkflowTagsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "N8nTag": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "title": {
+                "default": "",
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "tag_id": {
+                "default": "",
+                "title": "Tag Id",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "title": "N8nTag",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/N8nTag"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "N8nTagList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "update_n8n_workflow_tags",
+      "description": "Replace the full set of tags assigned to one n8n workflow (pass every tag id that should remain, not just the ones to add).",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.workflow.tags_updated"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "workflow_id": {
+            "description": "n8n workflow id (see list_workflows).",
+            "title": "Workflow Id",
+            "type": "string"
+          },
+          "tag_ids": {
+            "description": "Full replacement list of tag ids to assign to this workflow.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tag Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "workflow_id",
+          "tag_ids"
+        ],
+        "title": "UpdateWorkflowTagsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "N8nTag": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "title": {
+                "default": "",
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "tag_id": {
+                "default": "",
+                "title": "Tag Id",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "title": "N8nTag",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/N8nTag"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "N8nTagList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "n8n-connector.update_workflow_tags",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "list_n8n_workflow_versions",
+      "description": "List the saved version history of one n8n workflow.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "workflow_id": {
+            "description": "n8n workflow id (see list_workflows).",
+            "title": "Workflow Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workflow_id"
+        ],
+        "title": "ListWorkflowVersionsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "N8nWorkflowVersion": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "title": {
+                "default": "",
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "version_id": {
+                "default": "",
+                "title": "Version Id",
+                "type": "string"
+              },
+              "workflow_id": {
+                "default": "",
+                "title": "Workflow Id",
+                "type": "string"
+              },
+              "name": {
+                "default": "",
+                "title": "Name",
+                "type": "string"
+              },
+              "autosaved": {
+                "default": false,
+                "title": "Autosaved",
+                "type": "boolean"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "title": "N8nWorkflowVersion",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/N8nWorkflowVersion"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "N8nWorkflowVersionList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "get_n8n_workflow_version",
+      "description": "Read one specific saved version of an n8n workflow in full.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "workflow_id": {
+            "description": "n8n workflow id (see list_workflows).",
+            "title": "Workflow Id",
+            "type": "string"
+          },
+          "version_id": {
+            "description": "Specific version id (see list_workflow_versions).",
+            "title": "Version Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workflow_id",
+          "version_id"
+        ],
+        "title": "GetWorkflowVersionParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "version_id": {
+            "default": "",
+            "title": "Version Id",
+            "type": "string"
+          },
+          "workflow_id": {
+            "default": "",
+            "title": "Workflow Id",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "title": "Name",
+            "type": "string"
+          },
+          "autosaved": {
+            "default": false,
+            "title": "Autosaved",
+            "type": "boolean"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          }
+        },
+        "title": "N8nWorkflowVersion",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "unarchive_n8n_workflow",
+      "description": "Unarchive a previously archived n8n workflow, making it visible and editable again.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.workflow.unarchived"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "workflow_id": {
+            "description": "n8n workflow id to unarchive (see list_workflows).",
+            "title": "Workflow Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workflow_id"
+        ],
+        "title": "UnarchiveWorkflowParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "workflow_id": {
+            "default": "",
+            "title": "Workflow Id",
+            "type": "string"
+          },
+          "active": {
+            "default": false,
+            "title": "Active",
+            "type": "boolean"
+          },
+          "execution_id": {
+            "default": "",
+            "title": "Execution Id",
+            "type": "string"
+          }
+        },
+        "title": "WorkflowActionResult",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.unarchive_workflow",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "transfer_n8n_workflow",
+      "description": "Move an n8n workflow to a different project (Enterprise/multi-project instances only).",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.workflow.transferred"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "workflow_id": {
+            "description": "n8n workflow id to transfer (see list_workflows).",
+            "title": "Workflow Id",
+            "type": "string"
+          },
+          "destination_project_id": {
+            "description": "Target project id to move the workflow into.",
+            "title": "Destination Project Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workflow_id",
+          "destination_project_id"
+        ],
+        "title": "TransferWorkflowParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "workflow_id": {
+            "default": "",
+            "title": "Workflow Id",
+            "type": "string"
+          },
+          "active": {
+            "default": false,
+            "title": "Active",
+            "type": "boolean"
+          },
+          "execution_id": {
+            "default": "",
+            "title": "Execution Id",
+            "type": "string"
+          }
+        },
+        "title": "WorkflowActionResult",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.transfer_workflow",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "get_n8n_execution_tags",
+      "description": "Read the tags currently assigned to one n8n execution.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "execution_id": {
+            "description": "n8n execution id (see list_executions).",
+            "title": "Execution Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "execution_id"
+        ],
+        "title": "GetExecutionTagsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "N8nTag": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "title": {
+                "default": "",
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "tag_id": {
+                "default": "",
+                "title": "Tag Id",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "title": "N8nTag",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/N8nTag"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "N8nTagList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "update_n8n_execution_tags",
+      "description": "Replace the full set of tags assigned to one n8n execution.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.execution.tags_updated"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "execution_id": {
+            "description": "n8n execution id (see list_executions).",
+            "title": "Execution Id",
+            "type": "string"
+          },
+          "tag_ids": {
+            "description": "Full replacement list of tag ids to assign to this execution.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tag Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "execution_id",
+          "tag_ids"
+        ],
+        "title": "UpdateExecutionTagsParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "N8nTag": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "title": {
+                "default": "",
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "tag_id": {
+                "default": "",
+                "title": "Tag Id",
+                "type": "string"
+              },
+              "created_at": {
+                "default": "",
+                "title": "Created At",
+                "type": "string"
+              }
+            },
+            "title": "N8nTag",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/N8nTag"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "N8nTagList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "n8n-connector.update_execution_tags",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "get_n8n_credential",
+      "description": "Read one credential's metadata (name, type, timestamps) -- never its secret field values, which n8n's API never returns after creation.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "credential_id": {
+            "description": "n8n credential id (see list_credentials).",
+            "title": "Credential Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "credential_id"
+        ],
+        "title": "GetCredentialParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "credential_id": {
+            "default": "",
+            "title": "Credential Id",
+            "type": "string"
+          },
+          "credential_type": {
+            "default": "",
+            "title": "Credential Type",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "title": "N8nCredential",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "update_n8n_credential",
+      "description": "Update a credential's name and/or its field values on your connected n8n instance. WARNING: this stores sensitive data -- only use when you trust the source of the new values.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.credential.updated"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "credential_id": {
+            "description": "n8n credential id to update (see list_credentials).",
+            "title": "Credential Id",
+            "type": "string"
+          },
+          "name": {
+            "default": "",
+            "description": "New display name. Leave empty to keep the current one.",
+            "title": "Name",
+            "type": "string"
+          },
+          "credential_type_name": {
+            "default": "",
+            "description": "New credential type name -- required only if changing type, must be paired with data.",
+            "title": "Credential Type Name",
+            "type": "string"
+          },
+          "data": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "New credential field values (see get_credential_schema). Required if changing type.",
+            "title": "Data"
+          },
+          "is_partial_data": {
+            "default": false,
+            "description": "If true, merges the given data into the existing (unredacted) data instead of replacing it entirely.",
+            "title": "Is Partial Data",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "credential_id"
+        ],
+        "title": "UpdateCredentialParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "credential_id": {
+            "default": "",
+            "title": "Credential Id",
+            "type": "string"
+          },
+          "credential_type": {
+            "default": "",
+            "title": "Credential Type",
+            "type": "string"
+          },
+          "created_at": {
+            "default": "",
+            "title": "Created At",
+            "type": "string"
+          },
+          "updated_at": {
+            "default": "",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "title": "N8nCredential",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.update_credential",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "test_n8n_credential",
+      "description": "Test whether a credential's stored values still work against its target service.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "credential_id": {
+            "description": "n8n credential id to test (see list_credentials).",
+            "title": "Credential Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "credential_id"
+        ],
+        "title": "TestCredentialParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "default": "",
+            "title": "Status",
+            "type": "string"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "message": {
+            "default": "",
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "title": "CredentialTestResult",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "transfer_n8n_credential",
+      "description": "Move a credential to a different project (Enterprise/multi-project instances only).",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.credential.transferred"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "credential_id": {
+            "description": "n8n credential id to transfer (see list_credentials).",
+            "title": "Credential Id",
+            "type": "string"
+          },
+          "destination_project_id": {
+            "description": "Target project id to move the credential into.",
+            "title": "Destination Project Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "credential_id",
+          "destination_project_id"
+        ],
+        "title": "TransferCredentialParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "deleted": {
+            "default": false,
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "title": "DeleteResult",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.transfer_credential",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "list_n8n_variables",
+      "description": "List variables defined on your connected n8n instance -- named key/value pairs any workflow can reference via $vars.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "Max variables to return per page.",
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "cursor": {
+            "default": "",
+            "description": "Pagination cursor from a previous call's nextCursor.",
+            "title": "Cursor",
+            "type": "string"
+          }
+        },
+        "title": "ListVariablesParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "N8nVariable": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "title": {
+                "default": "",
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "key": {
+                "default": "",
+                "title": "Key",
+                "type": "string"
+              },
+              "value": {
+                "default": "",
+                "title": "Value",
+                "type": "string"
+              },
+              "project_name": {
+                "default": "",
+                "title": "Project Name",
+                "type": "string"
+              }
+            },
+            "title": "N8nVariable",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/N8nVariable"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "N8nVariableList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "create_n8n_variable",
+      "description": "Create a new instance-wide variable on your connected n8n instance.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.variable.created"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "key": {
+            "description": "Variable name -- used in n8n expressions as $vars.<key>.",
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "description": "Variable value.",
+            "title": "Value",
+            "type": "string"
+          },
+          "project_id": {
+            "default": "",
+            "description": "Project to create the variable in. Defaults to the user's personal project.",
+            "title": "Project Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "CreateVariableParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "key": {
+            "default": "",
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "default": "",
+            "title": "Value",
+            "type": "string"
+          },
+          "project_name": {
+            "default": "",
+            "title": "Project Name",
+            "type": "string"
+          }
+        },
+        "title": "N8nVariable",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.create_variable",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "update_n8n_variable",
+      "description": "Update an existing variable's value on your connected n8n instance.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.variable.updated"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "variable_id": {
+            "description": "n8n variable id to update (see list_variables).",
+            "title": "Variable Id",
+            "type": "string"
+          },
+          "key": {
+            "description": "New variable name.",
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "description": "New variable value.",
+            "title": "Value",
+            "type": "string"
+          },
+          "project_id": {
+            "default": "",
+            "description": "Project the variable belongs to. Leave empty to keep unchanged.",
+            "title": "Project Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "variable_id",
+          "key",
+          "value"
+        ],
+        "title": "UpdateVariableParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "key": {
+            "default": "",
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "default": "",
+            "title": "Value",
+            "type": "string"
+          },
+          "project_name": {
+            "default": "",
+            "title": "Project Name",
+            "type": "string"
+          }
+        },
+        "title": "N8nVariable",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.update_variable",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "delete_n8n_variable",
+      "description": "Permanently delete a variable from your connected n8n instance. Workflows referencing it will get an empty value at runtime.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.variable.deleted"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "variable_id": {
+            "description": "n8n variable id to permanently delete (see list_variables).",
+            "title": "Variable Id",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Must be true. Deletion is permanent.",
+            "title": "Confirm",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "variable_id"
+        ],
+        "title": "DeleteVariableParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "deleted": {
+            "default": false,
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "title": "DeleteResult",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.delete_variable",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "list_n8n_users",
+      "description": "List users on your connected n8n instance. Only meaningful on multi-user (Enterprise) instances -- self-hosted single-owner instances will just show the one owner account.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "limit": {
+            "default": 100,
+            "description": "Max users to return per page.",
+            "maximum": 200,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "cursor": {
+            "default": "",
+            "description": "Pagination cursor from a previous call's nextCursor.",
+            "title": "Cursor",
+            "type": "string"
+          },
+          "include_role": {
+            "default": false,
+            "description": "Whether to include each user's global role in the results.",
+            "title": "Include Role",
+            "type": "boolean"
+          }
+        },
+        "title": "ListUsersParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "N8nUser": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "title": {
+                "default": "",
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "email": {
+                "default": "",
+                "title": "Email",
+                "type": "string"
+              },
+              "first_name": {
+                "default": "",
+                "title": "First Name",
+                "type": "string"
+              },
+              "last_name": {
+                "default": "",
+                "title": "Last Name",
+                "type": "string"
+              },
+              "role": {
+                "default": "",
+                "title": "Role",
+                "type": "string"
+              },
+              "is_pending": {
+                "default": false,
+                "title": "Is Pending",
+                "type": "boolean"
+              }
+            },
+            "title": "N8nUser",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/N8nUser"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "N8nUserList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "create_n8n_users",
+      "description": "Invite one or more new users to your connected n8n instance by email. Enterprise feature -- fails on Community edition instances.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.user.invited"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "invites": {
+            "description": "List of {email, role} dicts to invite, e.g. [{'email': 'a@b.com', 'role': 'global:member'}].",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Invites",
+            "type": "array"
+          }
+        },
+        "required": [
+          "invites"
+        ],
+        "title": "CreateUsersParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "$defs": {
+          "N8nUser": {
+            "properties": {
+              "id": {
+                "default": "",
+                "title": "Id",
+                "type": "string"
+              },
+              "title": {
+                "default": "",
+                "title": "Title",
+                "type": "string"
+              },
+              "kind": {
+                "default": "",
+                "title": "Kind",
+                "type": "string"
+              },
+              "subtitle": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Subtitle"
+              },
+              "description": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Description"
+              },
+              "status": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Status"
+              },
+              "url": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "default": null,
+                "title": "Url"
+              },
+              "email": {
+                "default": "",
+                "title": "Email",
+                "type": "string"
+              },
+              "first_name": {
+                "default": "",
+                "title": "First Name",
+                "type": "string"
+              },
+              "last_name": {
+                "default": "",
+                "title": "Last Name",
+                "type": "string"
+              },
+              "role": {
+                "default": "",
+                "title": "Role",
+                "type": "string"
+              },
+              "is_pending": {
+                "default": false,
+                "title": "Is Pending",
+                "type": "boolean"
+              }
+            },
+            "title": "N8nUser",
+            "type": "object",
+            "x-sdl": "entity"
+          }
+        },
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/$defs/N8nUser"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Total"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "has_more": {
+            "default": false,
+            "title": "Has More",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "N8nUserList",
+        "type": "object",
+        "x-sdl": "entity-list"
+      },
+      "event": "n8n-connector.create_users",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "get_n8n_user",
+      "description": "Read one user's profile on your connected n8n instance, by id or email.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "id_or_email": {
+            "description": "User id or email address.",
+            "title": "Id Or Email",
+            "type": "string"
+          },
+          "include_role": {
+            "default": false,
+            "description": "Whether to include the user's global role.",
+            "title": "Include Role",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id_or_email"
+        ],
+        "title": "GetUserParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "email": {
+            "default": "",
+            "title": "Email",
+            "type": "string"
+          },
+          "first_name": {
+            "default": "",
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "default": "",
+            "title": "Last Name",
+            "type": "string"
+          },
+          "role": {
+            "default": "",
+            "title": "Role",
+            "type": "string"
+          },
+          "is_pending": {
+            "default": false,
+            "title": "Is Pending",
+            "type": "boolean"
+          }
+        },
+        "title": "N8nUser",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "delete_n8n_user",
+      "description": "Permanently delete a user from your connected n8n instance. Their workflows and credentials are NOT deleted -- transfer ownership first if needed.",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.user.deleted"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "id_or_email": {
+            "description": "User id or email address to permanently delete.",
+            "title": "Id Or Email",
+            "type": "string"
+          },
+          "confirm": {
+            "default": false,
+            "description": "Must be true. Deletion is permanent.",
+            "title": "Confirm",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id_or_email"
+        ],
+        "title": "DeleteUserParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "deleted": {
+            "default": false,
+            "title": "Deleted",
+            "type": "boolean"
+          }
+        },
+        "title": "DeleteResult",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.delete_user",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "change_n8n_user_role",
+      "description": "Change a user's global role on your connected n8n instance (e.g. 'global:admin', 'global:member').",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.user.role_changed"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "id_or_email": {
+            "description": "User id or email address.",
+            "title": "Id Or Email",
+            "type": "string"
+          },
+          "new_role_name": {
+            "description": "New global role, e.g. 'global:admin', 'global:member'.",
+            "title": "New Role Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id_or_email",
+          "new_role_name"
+        ],
+        "title": "ChangeUserRoleParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "email": {
+            "default": "",
+            "title": "Email",
+            "type": "string"
+          },
+          "first_name": {
+            "default": "",
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "default": "",
+            "title": "Last Name",
+            "type": "string"
+          },
+          "role": {
+            "default": "",
+            "title": "Role",
+            "type": "string"
+          },
+          "is_pending": {
+            "default": false,
+            "title": "Is Pending",
+            "type": "boolean"
+          }
+        },
+        "title": "N8nUser",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.change_user_role",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "pull_n8n_source_control",
+      "description": "Pull the latest changes from the connected remote Git repository into your n8n instance (Environments/Source Control feature -- Enterprise).",
+      "action_type": "write",
+      "chain_callable": true,
+      "effects": [
+        "n8n.source_control.pulled"
+      ],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "force": {
+            "default": false,
+            "description": "Discard uncommitted local changes/merge conflicts and force the pull.",
+            "title": "Force",
+            "type": "boolean"
+          },
+          "auto_publish": {
+            "default": "none",
+            "description": "Publishing behavior after import: 'none' (keep local published state), 'all' (publish everything imported), or 'published' (only what was published locally before).",
+            "title": "Auto Publish",
+            "type": "string"
+          }
+        },
+        "title": "PullSourceControlParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "files_changed": {
+            "default": 0,
+            "title": "Files Changed",
+            "type": "integer"
+          },
+          "summary_json": {
+            "default": "",
+            "title": "Summary Json",
+            "type": "string"
+          }
+        },
+        "title": "SourceControlPullResult",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "n8n-connector.pull_source_control",
+      "background": false,
+      "long_running": false,
+      "scopes": [],
+      "owner_chat_tool": "n8n-connector"
+    },
+    {
+      "name": "generate_n8n_audit",
+      "description": "Generate a security audit report for your connected n8n instance -- flags risky nodes, exposed credentials, outdated workflows, and more.",
+      "action_type": "read",
+      "chain_callable": true,
+      "effects": [],
+      "id_projection": "",
+      "params_schema": {
+        "properties": {
+          "days_abandoned_workflow": {
+            "default": 90,
+            "description": "Workflows with no executions in this many days are flagged as abandoned.",
+            "title": "Days Abandoned Workflow",
+            "type": "integer"
+          },
+          "categories": {
+            "description": "Which risk categories to include: credentials, database, filesystem, nodes, instance. Empty for all.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Categories",
+            "type": "array"
+          }
+        },
+        "title": "GenerateAuditParams",
+        "type": "object"
+      },
+      "return_schema": {
+        "properties": {
+          "id": {
+            "default": "",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "default": "",
+            "title": "Title",
+            "type": "string"
+          },
+          "kind": {
+            "default": "",
+            "title": "Kind",
+            "type": "string"
+          },
+          "subtitle": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Subtitle"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Description"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Url"
+          },
+          "report_json": {
+            "default": "",
+            "title": "Report Json",
+            "type": "string"
+          }
+        },
+        "title": "AuditReport",
+        "type": "object",
+        "x-sdl": "entity"
+      },
+      "event": "",
       "background": false,
       "long_running": false,
       "scopes": [],

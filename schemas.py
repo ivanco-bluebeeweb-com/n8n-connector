@@ -259,3 +259,232 @@ class CreateTagParams(BaseModel):
 class DeleteTagParams(BaseModel):
     tag_id: str = Field(..., description="n8n tag id to permanently delete (see list_tags).")
     confirm: bool = Field(False, description="Must be true. Deletion is permanent.")
+
+
+class UpdateTagParams(BaseModel):
+    tag_id: str = Field(..., description="n8n tag id to rename (see list_tags).")
+    name: str = Field(..., description="New name for the tag.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Workflow tags / versions / unarchive / transfer
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class GetWorkflowTagsParams(BaseModel):
+    workflow_id: str = Field(..., description="n8n workflow id (see list_workflows).")
+
+
+class UpdateWorkflowTagsParams(BaseModel):
+    workflow_id: str = Field(..., description="n8n workflow id (see list_workflows).")
+    tag_ids: list[str] = Field(..., description="Full replacement list of tag ids to assign to this workflow.")
+
+
+class ListWorkflowVersionsParams(BaseModel):
+    workflow_id: str = Field(..., description="n8n workflow id (see list_workflows).")
+
+
+class GetWorkflowVersionParams(BaseModel):
+    workflow_id: str = Field(..., description="n8n workflow id (see list_workflows).")
+    version_id: str = Field(..., description="Specific version id (see list_workflow_versions).")
+
+
+class N8nWorkflowVersion(sdl.Entity):
+    id: str = ""
+    title: str = ""
+    version_id: str = ""
+    workflow_id: str = ""
+    name: str = ""
+    autosaved: bool = False
+    created_at: str = ""
+
+
+class N8nWorkflowVersionList(sdl.EntityList[N8nWorkflowVersion]):
+    pass
+
+
+class UnarchiveWorkflowParams(BaseModel):
+    workflow_id: str = Field(..., description="n8n workflow id to unarchive (see list_workflows).")
+
+
+class TransferWorkflowParams(BaseModel):
+    workflow_id: str = Field(..., description="n8n workflow id to transfer (see list_workflows).")
+    destination_project_id: str = Field(..., description="Target project id to move the workflow into.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Execution tags
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class GetExecutionTagsParams(BaseModel):
+    execution_id: str = Field(..., description="n8n execution id (see list_executions).")
+
+
+class UpdateExecutionTagsParams(BaseModel):
+    execution_id: str = Field(..., description="n8n execution id (see list_executions).")
+    tag_ids: list[str] = Field(..., description="Full replacement list of tag ids to assign to this execution.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Credentials -- extra operations beyond Срез 2 (get by id, update, test, transfer)
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class GetCredentialParams(BaseModel):
+    credential_id: str = Field(..., description="n8n credential id (see list_credentials).")
+
+
+class UpdateCredentialParams(BaseModel):
+    credential_id: str = Field(..., description="n8n credential id to update (see list_credentials).")
+    name: str = Field("", description="New display name. Leave empty to keep the current one.")
+    credential_type_name: str = Field(
+        "", description="New credential type name -- required only if changing type, must be paired with data."
+    )
+    data: dict | None = Field(None, description="New credential field values (see get_credential_schema). Required if changing type.")
+    is_partial_data: bool = Field(
+        False, description="If true, merges the given data into the existing (unredacted) data instead of replacing it entirely."
+    )
+
+
+class TestCredentialParams(BaseModel):
+    credential_id: str = Field(..., description="n8n credential id to test (see list_credentials).")
+
+
+class CredentialTestResult(sdl.Entity):
+    id: str = ""
+    title: str = ""
+    status: str = ""
+    message: str = ""
+
+
+class TransferCredentialParams(BaseModel):
+    credential_id: str = Field(..., description="n8n credential id to transfer (see list_credentials).")
+    destination_project_id: str = Field(..., description="Target project id to move the credential into.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Variables -- full resource (list/create/update/delete)
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class ListVariablesParams(BaseModel):
+    limit: int = Field(100, ge=1, le=200, description="Max variables to return per page.")
+    cursor: str = Field("", description="Pagination cursor from a previous call's nextCursor.")
+
+
+class N8nVariable(sdl.Entity):
+    id: str = ""
+    title: str = ""
+    key: str = ""
+    value: str = ""
+    project_name: str = ""
+
+
+class N8nVariableList(sdl.EntityList[N8nVariable]):
+    pass
+
+
+class CreateVariableParams(BaseModel):
+    key: str = Field(..., description="Variable name -- used in n8n expressions as $vars.<key>.")
+    value: str = Field(..., description="Variable value.")
+    project_id: str = Field("", description="Project to create the variable in. Defaults to the user's personal project.")
+
+
+class UpdateVariableParams(BaseModel):
+    variable_id: str = Field(..., description="n8n variable id to update (see list_variables).")
+    key: str = Field(..., description="New variable name.")
+    value: str = Field(..., description="New variable value.")
+    project_id: str = Field("", description="Project the variable belongs to. Leave empty to keep unchanged.")
+
+
+class DeleteVariableParams(BaseModel):
+    variable_id: str = Field(..., description="n8n variable id to permanently delete (see list_variables).")
+    confirm: bool = Field(False, description="Must be true. Deletion is permanent.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Users -- full resource. Only relevant for multi-user/Enterprise n8n instances.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class ListUsersParams(BaseModel):
+    limit: int = Field(100, ge=1, le=200, description="Max users to return per page.")
+    cursor: str = Field("", description="Pagination cursor from a previous call's nextCursor.")
+    include_role: bool = Field(False, description="Whether to include each user's global role in the results.")
+
+
+class N8nUser(sdl.Entity):
+    id: str = ""
+    title: str = ""
+    email: str = ""
+    first_name: str = ""
+    last_name: str = ""
+    role: str = ""
+    is_pending: bool = False
+
+
+class N8nUserList(sdl.EntityList[N8nUser]):
+    pass
+
+
+class CreateUsersParams(BaseModel):
+    invites: list[dict] = Field(
+        ..., description="List of {email, role} dicts to invite, e.g. [{'email': 'a@b.com', 'role': 'global:member'}]."
+    )
+
+
+class GetUserParams(BaseModel):
+    id_or_email: str = Field(..., description="User id or email address.")
+    include_role: bool = Field(False, description="Whether to include the user's global role.")
+
+
+class DeleteUserParams(BaseModel):
+    id_or_email: str = Field(..., description="User id or email address to permanently delete.")
+    confirm: bool = Field(False, description="Must be true. Deletion is permanent.")
+
+
+class ChangeUserRoleParams(BaseModel):
+    id_or_email: str = Field(..., description="User id or email address.")
+    new_role_name: str = Field(..., description="New global role, e.g. 'global:admin', 'global:member'.")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Source Control -- pull changes from the connected remote repository.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class PullSourceControlParams(BaseModel):
+    force: bool = Field(False, description="Discard uncommitted local changes/merge conflicts and force the pull.")
+    auto_publish: str = Field(
+        "none", description="Publishing behavior after import: 'none' (keep local published state), "
+                             "'all' (publish everything imported), or 'published' (only what was published locally before)."
+    )
+
+
+class SourceControlPullResult(sdl.Entity):
+    id: str = ""
+    title: str = ""
+    files_changed: int = 0
+    summary_json: str = ""
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Audit -- generate a security audit report for the instance.
+# ──────────────────────────────────────────────────────────────────────────
+
+
+class GenerateAuditParams(BaseModel):
+    days_abandoned_workflow: int = Field(
+        90, description="Workflows with no executions in this many days are flagged as abandoned."
+    )
+    categories: list[str] = Field(
+        default_factory=list,
+        description="Which risk categories to include: credentials, database, filesystem, nodes, instance. Empty for all.",
+    )
+
+
+class AuditReport(sdl.Entity):
+    id: str = ""
+    title: str = ""
+    report_json: str = ""

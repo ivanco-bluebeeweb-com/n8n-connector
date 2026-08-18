@@ -338,3 +338,267 @@ async def delete_tag(ctx, base_url: str, api_key: str, tag_id: str) -> dict:
         _api(base_url, f"/tags/{tag_id}"), headers=_headers(api_key),
     )
     return _check_status(resp, "delete tag")
+
+
+async def update_tag(ctx, base_url: str, api_key: str, tag_id: str, name: str) -> dict:
+    resp = await ctx.http.patch(
+        _api(base_url, f"/tags/{tag_id}"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json={"name": name},
+    )
+    return _check_status(resp, "rename tag")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Workflow tags / versions / unarchive / transfer
+# ──────────────────────────────────────────────────────────────────────────
+
+
+async def get_workflow_tags(ctx, base_url: str, api_key: str, workflow_id: str) -> list[dict]:
+    resp = await ctx.http.get(
+        _api(base_url, f"/workflows/{workflow_id}/tags"), headers=_headers(api_key),
+    )
+    body = _check_status(resp, "get workflow tags")
+    return body if isinstance(body, list) else body.get("data") or []
+
+
+async def update_workflow_tags(ctx, base_url: str, api_key: str, workflow_id: str, tag_ids: list[str]) -> list[dict]:
+    resp = await ctx.http.put(
+        _api(base_url, f"/workflows/{workflow_id}/tags"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json=[{"id": tid} for tid in tag_ids],
+    )
+    body = _check_status(resp, "update workflow tags")
+    return body if isinstance(body, list) else body.get("data") or []
+
+
+async def list_workflow_versions(ctx, base_url: str, api_key: str, workflow_id: str) -> list[dict]:
+    """GET /workflows/{id}/history -- confirmed per docs.n8n.io/connect/
+    n8n-api/workflow outline (2026-08-18): 'Retrieve workflow version history'."""
+    resp = await ctx.http.get(
+        _api(base_url, f"/workflows/{workflow_id}/history"), headers=_headers(api_key),
+    )
+    body = _check_status(resp, "list workflow versions")
+    return body if isinstance(body, list) else body.get("data") or []
+
+
+async def get_workflow_version(ctx, base_url: str, api_key: str, workflow_id: str, version_id: str) -> dict:
+    resp = await ctx.http.get(
+        _api(base_url, f"/workflows/{workflow_id}/{version_id}"), headers=_headers(api_key),
+    )
+    return _check_status(resp, "get workflow version")
+
+
+async def unarchive_workflow(ctx, base_url: str, api_key: str, workflow_id: str) -> dict:
+    resp = await ctx.http.post(
+        _api(base_url, f"/workflows/{workflow_id}/unarchive"), headers=_headers(api_key),
+    )
+    return _check_status(resp, "unarchive workflow")
+
+
+async def transfer_workflow(ctx, base_url: str, api_key: str, workflow_id: str, destination_project_id: str) -> dict:
+    resp = await ctx.http.put(
+        _api(base_url, f"/workflows/{workflow_id}/transfer"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json={"destinationProjectId": destination_project_id},
+    )
+    return _check_status(resp, "transfer workflow")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Execution tags
+# ──────────────────────────────────────────────────────────────────────────
+
+
+async def get_execution_tags(ctx, base_url: str, api_key: str, execution_id: int) -> list[dict]:
+    resp = await ctx.http.get(
+        _api(base_url, f"/executions/{execution_id}/tags"), headers=_headers(api_key),
+    )
+    body = _check_status(resp, "get execution tags")
+    return body if isinstance(body, list) else body.get("data") or []
+
+
+async def update_execution_tags(ctx, base_url: str, api_key: str, execution_id: int, tag_ids: list[str]) -> list[dict]:
+    resp = await ctx.http.put(
+        _api(base_url, f"/executions/{execution_id}/tags"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json=[{"id": tid} for tid in tag_ids],
+    )
+    body = _check_status(resp, "update execution tags")
+    return body if isinstance(body, list) else body.get("data") or []
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Credentials -- extra operations (get by id, update, test, transfer)
+# ──────────────────────────────────────────────────────────────────────────
+
+
+async def get_credential(ctx, base_url: str, api_key: str, credential_id: str) -> dict:
+    resp = await ctx.http.get(
+        _api(base_url, f"/credentials/{credential_id}"), headers=_headers(api_key),
+    )
+    return _check_status(resp, "get credential")
+
+
+async def update_credential(
+    ctx, base_url: str, api_key: str, credential_id: str, *,
+    name: str = "", credential_type_name: str = "", data: dict | None = None,
+    is_partial_data: bool = False,
+) -> dict:
+    payload: dict = {"isPartialData": is_partial_data}
+    if name:
+        payload["name"] = name
+    if credential_type_name:
+        payload["type"] = credential_type_name
+    if data is not None:
+        payload["data"] = data
+    resp = await ctx.http.patch(
+        _api(base_url, f"/credentials/{credential_id}"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json=payload,
+    )
+    return _check_status(resp, "update credential")
+
+
+async def test_credential(ctx, base_url: str, api_key: str, credential_id: str) -> dict:
+    resp = await ctx.http.post(
+        _api(base_url, f"/credentials/{credential_id}/test"), headers=_headers(api_key),
+    )
+    return _check_status(resp, "test credential")
+
+
+async def transfer_credential(ctx, base_url: str, api_key: str, credential_id: str, destination_project_id: str) -> dict:
+    resp = await ctx.http.put(
+        _api(base_url, f"/credentials/{credential_id}/transfer"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json={"destinationProjectId": destination_project_id},
+    )
+    return _check_status(resp, "transfer credential")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Variables -- full resource
+# ──────────────────────────────────────────────────────────────────────────
+
+
+async def list_variables(ctx, base_url: str, api_key: str, *, limit: int = 100, cursor: str | None = None) -> tuple[list[dict], str | None]:
+    params: dict = {"limit": limit}
+    if cursor:
+        params["cursor"] = cursor
+    resp = await ctx.http.get(
+        _api(base_url, "/variables"), headers=_headers(api_key), params=params,
+    )
+    body = _check_status(resp, "list variables")
+    return body.get("data") or [], body.get("nextCursor")
+
+
+async def create_variable(ctx, base_url: str, api_key: str, key: str, value: str, project_id: str = "") -> dict:
+    payload: dict = {"key": key, "value": value}
+    if project_id:
+        payload["projectId"] = project_id
+    resp = await ctx.http.post(
+        _api(base_url, "/variables"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json=payload,
+    )
+    return _check_status(resp, "create variable")
+
+
+async def update_variable(ctx, base_url: str, api_key: str, variable_id: str, key: str, value: str, project_id: str = "") -> dict:
+    payload: dict = {"key": key, "value": value}
+    if project_id:
+        payload["projectId"] = project_id
+    resp = await ctx.http.put(
+        _api(base_url, f"/variables/{variable_id}"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json=payload,
+    )
+    return _check_status(resp, "update variable")
+
+
+async def delete_variable(ctx, base_url: str, api_key: str, variable_id: str) -> dict:
+    resp = await ctx.http.delete(
+        _api(base_url, f"/variables/{variable_id}"), headers=_headers(api_key),
+    )
+    return _check_status(resp, "delete variable")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Users -- full resource (multi-user/Enterprise instances)
+# ──────────────────────────────────────────────────────────────────────────
+
+
+async def list_users(ctx, base_url: str, api_key: str, *, limit: int = 100, cursor: str | None = None, include_role: bool = False) -> tuple[list[dict], str | None]:
+    params: dict = {"limit": limit, "includeRole": include_role}
+    if cursor:
+        params["cursor"] = cursor
+    resp = await ctx.http.get(
+        _api(base_url, "/users"), headers=_headers(api_key), params=params,
+    )
+    body = _check_status(resp, "list users")
+    return body.get("data") or [], body.get("nextCursor")
+
+
+async def create_users(ctx, base_url: str, api_key: str, invites: list[dict]) -> dict:
+    resp = await ctx.http.post(
+        _api(base_url, "/users"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json=invites,
+    )
+    return _check_status(resp, "create users")
+
+
+async def get_user(ctx, base_url: str, api_key: str, id_or_email: str, include_role: bool = False) -> dict:
+    resp = await ctx.http.get(
+        _api(base_url, f"/users/{id_or_email}"), headers=_headers(api_key),
+        params={"includeRole": include_role},
+    )
+    return _check_status(resp, "get user")
+
+
+async def delete_user(ctx, base_url: str, api_key: str, id_or_email: str) -> dict:
+    resp = await ctx.http.delete(
+        _api(base_url, f"/users/{id_or_email}"), headers=_headers(api_key),
+    )
+    return _check_status(resp, "delete user")
+
+
+async def change_user_role(ctx, base_url: str, api_key: str, id_or_email: str, new_role_name: str) -> dict:
+    resp = await ctx.http.patch(
+        _api(base_url, f"/users/{id_or_email}/role"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json={"newRoleName": new_role_name},
+    )
+    return _check_status(resp, "change user role")
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Source Control -- pull from the connected remote repository
+# ──────────────────────────────────────────────────────────────────────────
+
+
+async def pull_source_control(ctx, base_url: str, api_key: str, force: bool = False, auto_publish: str = "none") -> list[dict]:
+    resp = await ctx.http.post(
+        _api(base_url, "/source-control/pull"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json={"force": force, "autoPublish": auto_publish},
+    )
+    body = _check_status(resp, "pull source control")
+    return body if isinstance(body, list) else []
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Audit -- generate a security audit report
+# ──────────────────────────────────────────────────────────────────────────
+
+
+async def generate_audit(ctx, base_url: str, api_key: str, days_abandoned_workflow: int = 90, categories: list[str] | None = None) -> dict:
+    additional_options: dict = {"daysAbandonedWorkflow": days_abandoned_workflow}
+    if categories:
+        additional_options["categories"] = categories
+    resp = await ctx.http.post(
+        _api(base_url, "/audit"),
+        headers={**_headers(api_key), "Content-Type": "application/json"},
+        json={"additionalOptions": additional_options},
+    )
+    return _check_status(resp, "generate audit")
