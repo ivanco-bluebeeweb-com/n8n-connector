@@ -1,4 +1,4 @@
-"""Panel UI -- Срез 1 (connection) only.
+"""Panel UI -- connection (Срез 1) + workflows list (Срез 2).
 
 SKETCH (PREPARATION.md section 6), implemented:
   ui.Stack (v, gap=4)
@@ -43,6 +43,7 @@ from __future__ import annotations
 
 from imperal_sdk import ui
 
+import n8n_client as nc
 from app import ext
 import handlers as h
 
@@ -57,6 +58,29 @@ def _connected_card(detail: str) -> ui.UINode:
                       on_click=ui.Call("disconnect_n8n")),
         ]),
     )
+
+
+def _workflow_row(w) -> ui.UINode:
+    """One workflow row -- plain content, no Card wrapper, no padding/border.
+    A Divider() between rows (added by the caller) is the ONLY separator,
+    per Vlad's standing sidebar rule (PREPARATION.md section 7)."""
+    status = "Active" if w.active else "Inactive"
+    subtitle = f"{status}" + (f" · {w.tags}" if w.tags else "")
+    return ui.Stack(direction="v", gap=1, children=[
+        ui.Text(w.title, variant="body", weight="medium"),
+        ui.Text(subtitle, variant="caption"),
+    ])
+
+
+def _workflows_section(workflows: list) -> ui.UINode:
+    if not workflows:
+        return ui.Text("No workflows yet.", variant="caption")
+    children: list[ui.UINode] = []
+    for i, w in enumerate(workflows):
+        if i > 0:
+            children.append(ui.Divider())
+        children.append(_workflow_row(w))
+    return ui.Stack(direction="v", gap=2, children=children)
 
 
 def _connect_card() -> ui.UINode:
@@ -110,9 +134,20 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
             ),
         ])
 
+    workflows: list = []
+    if connected:
+        try:
+            rows, _ = await nc.list_workflows(ctx, base_url, api_key, limit=50)
+            workflows = [h._workflow_entity(w) for w in rows]
+        except nc.ProviderError:
+            workflows = []
+
     return ui.Stack(direction="v", gap=4, children=[
         header,
         _connected_card(f"Instance: {base_url}"),
+        ui.Divider(),
+        ui.Text("Workflows", variant="subtitle", weight="medium"),
+        _workflows_section(workflows),
     ])
 
 
