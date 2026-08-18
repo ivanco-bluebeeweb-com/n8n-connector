@@ -417,6 +417,12 @@ async def unpublish_n8n_workflow(ctx, params: UnpublishWorkflowParams) -> Action
 async def run_n8n_workflow(ctx, params: RunWorkflowParams) -> ActionResult:
     """Trigger an on-demand run via n8n's recent (late-2025) run endpoint; falls back to
     the workflow's own Webhook node URL on older instances that lack it."""
+    if not params.confirm:
+        return ActionResult.error(
+            "Please confirm -- running a workflow executes its real actions in your "
+            "n8n instance right now, and there is no dry-run or undo.",
+            code="N8N_CONFIRM_REQUIRED",
+        )
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()

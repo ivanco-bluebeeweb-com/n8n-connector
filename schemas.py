@@ -466,6 +466,10 @@ class SourceControlPullResult(sdl.Entity):
     id: str = ""
     title: str = ""
     files_changed: int = 0
+    workflows_count: int = 0
+    credentials_count: int = 0
+    variables_count: int = 0
+    tags_count: int = 0
     summary_json: str = ""
 
 

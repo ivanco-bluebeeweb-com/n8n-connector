@@ -6086,6 +6086,26 @@
             "title": "Files Changed",
             "type": "integer"
           },
+          "workflows_count": {
+            "default": 0,
+            "title": "Workflows Count",
+            "type": "integer"
+          },
+          "credentials_count": {
+            "default": 0,
+            "title": "Credentials Count",
+            "type": "integer"
+          },
+          "variables_count": {
+            "default": 0,
+            "title": "Variables Count",
+            "type": "integer"
+          },
+          "tags_count": {
+            "default": 0,
+            "title": "Tags Count",
+            "type": "integer"
+          },
           "summary_json": {
             "default": "",
             "title": "Summary Json",
