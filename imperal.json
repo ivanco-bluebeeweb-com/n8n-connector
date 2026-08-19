@@ -6306,6 +6306,6 @@
       "pull_n8n_source_control": 20,
       "generate_n8n_audit": 40
     },
-    "notes": "BYO n8n instance connector -- user runs/pays for their own n8n (self-hosted or Cloud). Priced per-action on the mandatory fixed platform scale {0,8,16,20,40,60}: 0=credential setup only, 8=read, 16=standard single write, 20=action that executes real work right now (run_n8n_workflow, pull_n8n_source_control), 40=heavy diagnostic/aggregation (generate_n8n_audit), 60=bulk (stop_n8n_executions). See PRICING_HISTORY.md for full rationale."
+    "notes": "BYO n8n instance connector -- user runs/pays for their own n8n (self-hosted or Cloud). Priced per-action on the mandatory fixed platform scale {0,8,16,20,40,60}: 0=credential setup only, 8=read, 16=standard single write, 20=action that executes real work right now (run_n8n_workflow, pull_n8n_source_control), 40=heavy diagnostic/aggregation (generate_n8n_audit), 60=bulk (stop_n8n_executions). SYNCHRONISED WITH THE PLATFORM: applied via developer.update_pricing(pricing_config={\"tool_prices\":{...}}, revenue_split_dev=70) -- the explicit revenue_split_dev parameter is required for the call to actually take effect (confirmed live 2026-08-19); save_pricing is a known-broken no-op per Imperal Cloud task #1663 item #17. See PRICING_HISTORY.md for full rationale."
   }
 }
