@@ -335,3 +335,29 @@ async def test_delete_tag_requires_confirm_gate(ctx_connected):
     # either way it must not reach a live DELETE without confirmation.
     assert result.error is not None or result.data is None or getattr(result.data, "deleted", None) is not True \
         or True  # documented below: see SCENARIO_TESTS.md for the resolved verdict on this one
+
+
+# ── Part D4 (SCENARIO_TESTING_STANDARD.md): regression grep ────────────────
+# D3 (Security/SSRF) does not apply as a vulnerability here the way it does
+# for other apps: this connector is BYOK by design -- the whole point is
+# reaching the user's OWN n8n instance at whatever base_url they saved, so
+# "refuse a private/internal target" would break the app's actual purpose
+# (many self-hosted n8n instances legitimately live on a private network/VPN
+# the user's own infra reaches). What DOES matter is that every request goes
+# through the ONE saved base_url, never a hardcoded or otherwise-sourced
+# host -- a regression there would mean silently talking to the wrong n8n.
+
+def test_d4_every_outbound_call_is_built_from_the_stored_base_url():
+    import pathlib
+    import re
+
+    client_src = (pathlib.Path(__file__).resolve().parent.parent / "n8n_client.py").read_text(encoding="utf-8")
+    lines = client_src.splitlines()
+    call_idx = [i for i, line in enumerate(lines) if re.search(r"ctx\.http\.(get|post|put|patch|delete)\(", line)]
+    assert call_idx, "expected to find outbound ctx.http calls in n8n_client.py"
+    for i in call_idx:
+        # each call site's URL is built a few lines below via _api(base_url, ...)
+        window = "\n".join(lines[i:i + 3])
+        assert "_api(base_url" in window or "base_url" in window, (
+            f"outbound call not obviously built from base_url near line {i + 1}: {lines[i].strip()}"
+        )
