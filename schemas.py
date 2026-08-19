@@ -135,6 +135,7 @@ class N8nExecution(sdl.Entity):
     started_at: str = ""
     stopped_at: str = ""
     mode: str = ""
+    run_data: dict = Field(default_factory=dict)
 
 
 class N8nExecutionList(sdl.EntityList[N8nExecution]):

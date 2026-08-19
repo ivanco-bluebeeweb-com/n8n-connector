@@ -434,9 +434,12 @@ async def run_n8n_workflow(ctx, params: RunWorkflowParams) -> ActionResult:
     except nc.ProviderError as exc:
         return ActionResult.error(str(exc), code=exc.code)
     return ActionResult.success(
-        WorkflowActionResult(workflow_id=params.workflow_id, active=True),
+        WorkflowActionResult(
+            workflow_id=params.workflow_id,
+            active=True,
+            execution_id=str(result.get("executionId", "")),
+        ),
         summary=f"Workflow {params.workflow_id} run triggered.",
-        data_extra={"execution": result},
     )
 
 
@@ -490,8 +493,9 @@ async def get_n8n_execution(ctx, params: GetExecutionParams) -> ActionResult:
     except nc.ProviderError as exc:
         return ActionResult.error(str(exc), code=exc.code)
     entity = _execution_entity(e)
-    extra = {"data": e.get("data")} if params.include_data else {}
-    return ActionResult.success(entity, summary=f"Execution {entity.execution_id}: {entity.status}.", data_extra=extra)
+    if params.include_data:
+        entity.run_data = e.get("data") or {}
+    return ActionResult.success(entity, summary=f"Execution {entity.execution_id}: {entity.status}.")
 
 
 @chat.function(
@@ -1141,7 +1145,7 @@ async def update_n8n_variable(ctx, params: UpdateVariableParams) -> ActionResult
     if not (base_url and api_key):
         return _not_connected()
     try:
-        v = await nc.update_variable(ctx, base_url, api_key, params.variable_id, params.value)
+        v = await nc.update_variable(ctx, base_url, api_key, params.variable_id, params.key, params.value, params.project_id)
     except nc.ProviderError as exc:
         return ActionResult.error(str(exc), code=exc.code)
     return ActionResult.success(_variable_entity(v), summary=f"Variable {params.variable_id} updated.")
