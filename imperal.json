@@ -953,7 +953,7 @@
     {
       "name": "delete_n8n_workflow",
       "description": "Permanently delete a workflow from your n8n instance. Cannot be undone.",
-      "action_type": "write",
+      "action_type": "destructive",
       "chain_callable": true,
       "effects": [
         "n8n.workflow.deleted"
@@ -965,12 +965,6 @@
             "description": "n8n workflow id to permanently delete (see list_workflows).",
             "title": "Workflow Id",
             "type": "string"
-          },
-          "confirm": {
-            "default": false,
-            "description": "Must be true. Deletion is permanent and cannot be undone via this API.",
-            "title": "Confirm",
-            "type": "boolean"
           }
         },
         "required": [
@@ -1277,7 +1271,7 @@
     {
       "name": "run_n8n_workflow",
       "description": "Run an n8n workflow right now by id. This endpoint is recent in n8n's own API (added late 2025) -- older self-hosted instances may not have it; if it fails, trigger the workflow via its own Webhook node URL instead.",
-      "action_type": "write",
+      "action_type": "destructive",
       "chain_callable": true,
       "effects": [
         "n8n.workflow.executed"
@@ -1289,12 +1283,6 @@
             "description": "n8n workflow id to run right now (see list_workflows).",
             "title": "Workflow Id",
             "type": "string"
-          },
-          "confirm": {
-            "default": false,
-            "description": "Must be true. Running a workflow executes its real actions in your n8n instance right now -- there is no dry-run or undo.",
-            "title": "Confirm",
-            "type": "boolean"
           }
         },
         "required": [
@@ -1692,7 +1680,7 @@
     {
       "name": "delete_n8n_execution",
       "description": "Permanently delete one n8n execution record. This does not affect the workflow itself -- only its execution history.",
-      "action_type": "write",
+      "action_type": "destructive",
       "chain_callable": true,
       "effects": [
         "n8n.execution.deleted"
@@ -1704,12 +1692,6 @@
             "description": "n8n execution id to permanently delete (see list_executions).",
             "title": "Execution Id",
             "type": "string"
-          },
-          "confirm": {
-            "default": false,
-            "description": "Must be true. Deletion is permanent.",
-            "title": "Confirm",
-            "type": "boolean"
           }
         },
         "required": [
@@ -2494,7 +2476,7 @@
     {
       "name": "delete_n8n_credential",
       "description": "Permanently delete a credential from your connected n8n instance. Workflows using it will fail until re-configured. This is also the only way to 'change' a credential -- n8n has no update endpoint, so delete this one and create_n8n_credential a replacement.",
-      "action_type": "write",
+      "action_type": "destructive",
       "chain_callable": true,
       "effects": [
         "n8n.credential.deleted"
@@ -2506,12 +2488,6 @@
             "description": "n8n credential id to permanently delete (see list_credentials).",
             "title": "Credential Id",
             "type": "string"
-          },
-          "confirm": {
-            "default": false,
-            "description": "Must be true. Deletion is permanent -- and since n8n has no update endpoint for credentials, this is also the only way to 'change' one (delete, then create_credential again).",
-            "title": "Confirm",
-            "type": "boolean"
           }
         },
         "required": [
@@ -2989,7 +2965,7 @@
     {
       "name": "delete_n8n_tag",
       "description": "Permanently delete a tag from your connected n8n instance. Workflows keep working -- they just lose this tag.",
-      "action_type": "write",
+      "action_type": "destructive",
       "chain_callable": true,
       "effects": [
         "n8n.tag.deleted"
@@ -3001,12 +2977,6 @@
             "description": "n8n tag id to permanently delete (see list_tags).",
             "title": "Tag Id",
             "type": "string"
-          },
-          "confirm": {
-            "default": false,
-            "description": "Must be true. Deletion is permanent.",
-            "title": "Confirm",
-            "type": "boolean"
           }
         },
         "required": [
@@ -5156,7 +5126,7 @@
     {
       "name": "delete_n8n_variable",
       "description": "Permanently delete a variable from your connected n8n instance. Workflows referencing it will get an empty value at runtime.",
-      "action_type": "write",
+      "action_type": "destructive",
       "chain_callable": true,
       "effects": [
         "n8n.variable.deleted"
@@ -5168,12 +5138,6 @@
             "description": "n8n variable id to permanently delete (see list_variables).",
             "title": "Variable Id",
             "type": "string"
-          },
-          "confirm": {
-            "default": false,
-            "description": "Must be true. Deletion is permanent.",
-            "title": "Confirm",
-            "type": "boolean"
           }
         },
         "required": [
@@ -5752,7 +5716,7 @@
     {
       "name": "delete_n8n_user",
       "description": "Permanently delete a user from your connected n8n instance. Their workflows and credentials are NOT deleted -- transfer ownership first if needed.",
-      "action_type": "write",
+      "action_type": "destructive",
       "chain_callable": true,
       "effects": [
         "n8n.user.deleted"
@@ -5764,12 +5728,6 @@
             "description": "User id or email address to permanently delete.",
             "title": "Id Or Email",
             "type": "string"
-          },
-          "confirm": {
-            "default": false,
-            "description": "Must be true. Deletion is permanent.",
-            "title": "Confirm",
-            "type": "boolean"
           }
         },
         "required": [
@@ -6273,7 +6231,7 @@
       "slot": "left",
       "title": "n8n",
       "tree": {},
-      "icon": "🔗",
+      "icon": "\ud83d\udd17",
       "refresh": "manual",
       "center_overlay": false,
       "default_width": 320,

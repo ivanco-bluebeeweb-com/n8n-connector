@@ -85,7 +85,6 @@ class UpdateWorkflowParams(BaseModel):
 
 class DeleteWorkflowParams(BaseModel):
     workflow_id: str = Field(..., description="n8n workflow id to permanently delete (see list_workflows).")
-    confirm: bool = Field(False, description="Must be true. Deletion is permanent and cannot be undone via this API.")
 
 
 class PublishWorkflowParams(BaseModel):
@@ -98,9 +97,6 @@ class UnpublishWorkflowParams(BaseModel):
 
 class RunWorkflowParams(BaseModel):
     workflow_id: str = Field(..., description="n8n workflow id to run right now (see list_workflows).")
-    confirm: bool = Field(
-        False, description="Must be true. Running a workflow executes its real actions "
-                           "in your n8n instance right now -- there is no dry-run or undo.")
 
 
 class WorkflowActionResult(sdl.Entity):
@@ -152,7 +148,6 @@ class GetExecutionParams(BaseModel):
 
 class DeleteExecutionParams(BaseModel):
     execution_id: str = Field(..., description="n8n execution id to permanently delete (see list_executions).")
-    confirm: bool = Field(False, description="Must be true. Deletion is permanent.")
 
 
 class RetryExecutionParams(BaseModel):
@@ -225,10 +220,6 @@ class CreateCredentialParams(BaseModel):
 
 class DeleteCredentialParams(BaseModel):
     credential_id: str = Field(..., description="n8n credential id to permanently delete (see list_credentials).")
-    confirm: bool = Field(
-        False, description="Must be true. Deletion is permanent -- and since n8n has no update "
-                           "endpoint for credentials, this is also the only way to 'change' one "
-                           "(delete, then create_credential again).")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -258,7 +249,6 @@ class CreateTagParams(BaseModel):
 
 class DeleteTagParams(BaseModel):
     tag_id: str = Field(..., description="n8n tag id to permanently delete (see list_tags).")
-    confirm: bool = Field(False, description="Must be true. Deletion is permanent.")
 
 
 class UpdateTagParams(BaseModel):
@@ -400,7 +390,6 @@ class UpdateVariableParams(BaseModel):
 
 class DeleteVariableParams(BaseModel):
     variable_id: str = Field(..., description="n8n variable id to permanently delete (see list_variables).")
-    confirm: bool = Field(False, description="Must be true. Deletion is permanent.")
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -441,7 +430,6 @@ class GetUserParams(BaseModel):
 
 class DeleteUserParams(BaseModel):
     id_or_email: str = Field(..., description="User id or email address to permanently delete.")
-    confirm: bool = Field(False, description="Must be true. Deletion is permanent.")
 
 
 class ChangeUserRoleParams(BaseModel):

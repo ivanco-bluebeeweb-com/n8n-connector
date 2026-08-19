@@ -332,18 +332,18 @@ async def update_n8n_workflow(ctx, params: UpdateWorkflowParams) -> ActionResult
 @chat.function(
     "delete_n8n_workflow",
     "Permanently delete a workflow from your n8n instance. Cannot be undone.",
-    action_type="write",
+    action_type="destructive",
     data_model=DeleteResult,
     event="n8n-connector.delete_workflow",
     effects=["n8n.workflow.deleted"],
 )
 async def delete_n8n_workflow(ctx, params: DeleteWorkflowParams) -> ActionResult:
-    """Permanently delete a workflow via DELETE /workflows/{id}. Requires confirm=true."""
-    if not params.confirm:
-        return ActionResult.error(
-            "Deleting a workflow is permanent. Pass confirm=true to proceed.",
-            code="N8N_CONFIRM_REQUIRED",
-        )
+    """Permanently delete a workflow via DELETE /workflows/{id}.
+
+    action_type="destructive", not "write": n8n offers no undo for this, so
+    the kernel's own confirmation guard must intercept the call. A
+    hand-rolled confirm field here would double-prompt.
+    """
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()
@@ -408,21 +408,24 @@ async def unpublish_n8n_workflow(ctx, params: UnpublishWorkflowParams) -> Action
     "run_n8n_workflow",
     "Run an n8n workflow right now by id. This endpoint is recent in n8n's "
     "own API (added late 2025) -- older self-hosted instances may not have "
-    "it; if it fails, trigger the workflow via its own Webhook node URL instead.",
-    action_type="write",
+    "it; if it fails, trigger the workflow via its own Webhook node URL instead. "
+    "This executes the workflow's real actions immediately -- there is no dry-run or undo.",
+    action_type="destructive",
     data_model=WorkflowActionResult,
     event="n8n-connector.run_workflow",
     effects=["n8n.workflow.executed"],
 )
 async def run_n8n_workflow(ctx, params: RunWorkflowParams) -> ActionResult:
     """Trigger an on-demand run via n8n's recent (late-2025) run endpoint; falls back to
-    the workflow's own Webhook node URL on older instances that lack it."""
-    if not params.confirm:
-        return ActionResult.error(
-            "Please confirm -- running a workflow executes its real actions in your "
-            "n8n instance right now, and there is no dry-run or undo.",
-            code="N8N_CONFIRM_REQUIRED",
-        )
+    the workflow's own Webhook node URL on older instances that lack it.
+
+    action_type="destructive" per Imperal's action-type doctrine (mirrors
+    Make.com Connector's run_scenario): a workflow run is a real, irreversible
+    action in n8n with whatever side effects that workflow is built to have --
+    there is no way for this connector to know if those are reversible, so it
+    never assumes they are. The kernel's own confirmation card handles asking
+    the user before dispatch; this handler must NOT re-prompt.
+    """
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()
@@ -495,19 +498,18 @@ async def get_n8n_execution(ctx, params: GetExecutionParams) -> ActionResult:
     "delete_n8n_execution",
     "Permanently delete one n8n execution record. This does not affect the "
     "workflow itself -- only its execution history.",
-    action_type="write",
+    action_type="destructive",
     data_model=DeleteResult,
     event="n8n-connector.delete_execution",
     effects=["n8n.execution.deleted"],
 )
 async def delete_n8n_execution(ctx, params: DeleteExecutionParams) -> ActionResult:
-    """Permanently delete one execution record via DELETE /executions/{id}. Requires confirm=true.
-    Does not affect the workflow itself, only its execution history."""
-    if not params.confirm:
-        return ActionResult.error(
-            "Deletion is permanent -- pass confirm=true to proceed.",
-            code="N8N_CONFIRM_REQUIRED",
-        )
+    """Permanently delete one execution record via DELETE /executions/{id}.
+    Does not affect the workflow itself, only its execution history.
+
+    action_type="destructive": no undo, so the kernel's own confirmation
+    guard gates it instead of a hand-rolled confirm field.
+    """
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()
@@ -678,19 +680,18 @@ async def create_n8n_credential(ctx, params: CreateCredentialParams) -> ActionRe
     "Workflows using it will fail until re-configured. This is also the "
     "only way to 'change' a credential -- n8n has no update endpoint, so "
     "delete this one and create_n8n_credential a replacement.",
-    action_type="write",
+    action_type="destructive",
     data_model=DeleteResult,
     event="n8n-connector.delete_credential",
     effects=["n8n.credential.deleted"],
 )
 async def delete_n8n_credential(ctx, params: DeleteCredentialParams) -> ActionResult:
-    """Permanently delete a credential via DELETE /credentials/{id}. Requires confirm=true.
-    Also the only way to "change" one, since n8n has no update endpoint for credentials."""
-    if not params.confirm:
-        return ActionResult.error(
-            "Deletion is permanent -- pass confirm=true to proceed.",
-            code="N8N_CONFIRM_REQUIRED",
-        )
+    """Permanently delete a credential via DELETE /credentials/{id}.
+    Also the only way to "change" one, since n8n has no update endpoint for credentials.
+
+    action_type="destructive": no undo, so the kernel's own confirmation
+    guard gates it instead of a hand-rolled confirm field.
+    """
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()
@@ -776,19 +777,18 @@ async def update_n8n_tag(ctx, params: UpdateTagParams) -> ActionResult:
     "delete_n8n_tag",
     "Permanently delete a tag from your connected n8n instance. Workflows "
     "keep working -- they just lose this tag.",
-    action_type="write",
+    action_type="destructive",
     data_model=DeleteResult,
     event="n8n-connector.delete_tag",
     effects=["n8n.tag.deleted"],
 )
 async def delete_n8n_tag(ctx, params: DeleteTagParams) -> ActionResult:
-    """Permanently delete a tag via DELETE /tags/{id}. Requires confirm=true. Workflows keep
-    working -- they just lose this tag."""
-    if not params.confirm:
-        return ActionResult.error(
-            "Deletion is permanent -- pass confirm=true to proceed.",
-            code="N8N_CONFIRM_REQUIRED",
-        )
+    """Permanently delete a tag via DELETE /tags/{id}. Workflows keep
+    working -- they just lose this tag.
+
+    action_type="destructive": no undo, so the kernel's own confirmation
+    guard gates it instead of a hand-rolled confirm field.
+    """
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()
@@ -1151,18 +1151,17 @@ async def update_n8n_variable(ctx, params: UpdateVariableParams) -> ActionResult
     "delete_n8n_variable",
     "Permanently delete a variable from your connected n8n instance. "
     "Workflows referencing it will get an empty value at runtime.",
-    action_type="write",
+    action_type="destructive",
     data_model=DeleteResult,
     event="n8n-connector.delete_variable",
     effects=["n8n.variable.deleted"],
 )
 async def delete_n8n_variable(ctx, params: DeleteVariableParams) -> ActionResult:
-    """Delete via DELETE /variables/{id}. Requires confirm=true."""
-    if not params.confirm:
-        return ActionResult.error(
-            "Deletion is permanent -- pass confirm=true to proceed.",
-            code="N8N_CONFIRM_REQUIRED",
-        )
+    """Delete via DELETE /variables/{id}.
+
+    action_type="destructive": no undo, so the kernel's own confirmation
+    guard gates it instead of a hand-rolled confirm field.
+    """
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()
@@ -1252,18 +1251,17 @@ async def get_n8n_user(ctx, params: GetUserParams) -> ActionResult:
     "Permanently delete a user from your connected n8n instance. Their "
     "workflows and credentials are NOT deleted -- transfer ownership first "
     "if needed.",
-    action_type="write",
+    action_type="destructive",
     data_model=DeleteResult,
     event="n8n-connector.delete_user",
     effects=["n8n.user.deleted"],
 )
 async def delete_n8n_user(ctx, params: DeleteUserParams) -> ActionResult:
-    """Delete via DELETE /users/{idOrEmail}. Requires confirm=true."""
-    if not params.confirm:
-        return ActionResult.error(
-            "Deletion is permanent -- pass confirm=true to proceed.",
-            code="N8N_CONFIRM_REQUIRED",
-        )
+    """Delete via DELETE /users/{idOrEmail}.
+
+    action_type="destructive": no undo, so the kernel's own confirmation
+    guard gates it instead of a hand-rolled confirm field.
+    """
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()
