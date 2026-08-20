@@ -18,7 +18,7 @@ import handlers as h
 
 def _connection_section(base_url: str, connected: bool) -> ui.UINode:
     if not connected:
-        return ui.Stack(direction="v", gap=2, children=[
+        return ui.Stack(direction="v", gap=2, align="stretch", children=[
             ui.Text("Connection", variant="heading"),
             ui.Text("Not connected.", variant="caption"),
             ui.Text(
@@ -30,9 +30,10 @@ def _connection_section(base_url: str, connected: bool) -> ui.UINode:
                 action="connect_n8n",
                 submit_label="Verify and connect",
                 children=[
-                    ui.Input(param_name="base_url",
+                    ui.Input(param_name="base_url", label="Instance URL",
                               placeholder="https://n8n.example.com"),
-                    ui.Password(param_name="api_key", placeholder="n8n API key"),
+                    ui.Password(param_name="api_key", label="API key",
+                                 placeholder="n8n API key"),
                 ],
             ),
         ])

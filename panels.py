@@ -14,7 +14,9 @@ SKETCH, updated 2026-08-20 to the current no-card sidebar shape:
     disconnect lives here, not inline in the sidebar
 
 PRE-PANEL CHECKLIST pass:
-  - ui.Input / ui.Password: no label=, no type=      OK
+  - ui.Input / ui.Password: label= set on every field (2026-08-20 update
+    to UI_INTERFACE_STANDARD.md -- label is now mandatory, not optional),
+    placeholder= is a contextual example, not a substitute for the label OK
   - No ui.Card anywhere in the left sidebar slot      OK
   - ui.Dialog on a center_overlay panel, opened via ui.Call("__panel__...")
     (same proven pattern as make_connect_help / yt_connect_dialog)  OK
@@ -91,15 +93,16 @@ def _workflows_section(workflows: list) -> ui.UINode:
 
 
 def _connect_section() -> ui.UINode:
-    """Plain content, no Card wrapper -- shown only while not connected."""
-    return ui.Stack(direction="v", gap=3, align="start", children=[
+    """Plain content, no Card wrapper -- shown only while not connected.
+    Stretched full-width per UI_INTERFACE_STANDARD.md (2026-08-20): the
+    full-access warning lives ONLY in n8n_connect_help's modal now --
+    repeating it here would duplicate that instruction."""
+    return ui.Stack(direction="v", gap=3, align="stretch", children=[
         ui.Text("Connect n8n", variant="heading"),
         ui.Text(
             "Bring your own n8n instance -- self-hosted or n8n Cloud. Paste "
-            "your instance's URL and API key below. Both are verified "
-            "together before saving. This key gives full access to your "
-            "instance's workflows, executions AND credentials -- only "
-            "connect an account you're comfortable granting that to.",
+            "your instance's URL and API key below; both are verified "
+            "together before saving.",
             variant="caption",
         ),
         ui.Button("How do I get an API key?", variant="ghost", size="sm",
@@ -109,9 +112,10 @@ def _connect_section() -> ui.UINode:
             action="connect_n8n",
             submit_label="Verify and connect",
             children=[
-                ui.Input(param_name="base_url",
+                ui.Input(param_name="base_url", label="Instance URL",
                           placeholder="https://n8n.example.com"),
-                ui.Password(param_name="api_key", placeholder="n8n API key"),
+                ui.Password(param_name="api_key", label="API key",
+                             placeholder="n8n API key"),
             ],
         ),
     ])
@@ -127,7 +131,7 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
                         subtitle="Manage your n8n workflows from Imperal")
 
     if not connected:
-        return ui.Stack(direction="v", gap=4, align="start", children=[
+        return ui.Stack(direction="v", gap=4, align="stretch", children=[
             header,
             _connect_section(),
             ui.Alert(
@@ -147,7 +151,7 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
         except nc.ProviderError:
             workflows = []
 
-    return ui.Stack(direction="v", gap=4, align="start", children=[
+    return ui.Stack(direction="v", gap=4, align="stretch", children=[
         header,
         _connected_section(f"Instance: {base_url}"),
         ui.Divider(),
