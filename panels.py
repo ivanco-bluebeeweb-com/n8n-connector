@@ -1,20 +1,21 @@
 """Panel UI -- connection (Срез 1) + workflows list (Срез 2).
 
-SKETCH (PREPARATION.md section 6), implemented:
+SKETCH, updated 2026-08-20 to the current no-card sidebar shape:
   ui.Stack (v, gap=4)
     ui.Header
-    ui.Card (connect form OR connected status) -- ONE genuine widget, not a list
-      [not connected] ui.Input(base_url) FIRST, then ui.Password(api_key),
-                       ui.Button("How do I get an API key?")
-                       ui.Form(action=connect_n8n, submit_label="Verify and connect")
-      [connected]      ui.Text(detail) + ui.Button("Disconnect")
-  -- separate center_overlay dialog, opened by the help button --
+    [not connected] _connect_section() -- plain content, ui.Form(connect_n8n)
+    [connected]     _connected_section() -- plain text, then workflows list
+    ui.Divider()
+    _settings_button() -- ALWAYS the last element, secondary style
+  -- separate center_overlay dialogs --
   @ext.panel("n8n_connect_help", slot="center", center_overlay=True)
     ui.Dialog(title=..., content=ui.Stack(v, [ui.Text(step1..4), ui.Divider(), ui.Link(docs)]))
+  @ext.panel("n8n_settings", slot="center", center_overlay=True) -- panels_settings.py
+    disconnect lives here, not inline in the sidebar
 
 PRE-PANEL CHECKLIST pass:
   - ui.Input / ui.Password: no label=, no type=      OK
-  - ui.Card: content=, not children=                 OK
+  - No ui.Card anywhere in the left sidebar slot      OK
   - ui.Dialog on a center_overlay panel, opened via ui.Call("__panel__...")
     (same proven pattern as make_connect_help / yt_connect_dialog)  OK
   - ui.Form does not submit pre-set value= fields -- both base_url and
@@ -29,15 +30,16 @@ confirmed with Vlad 2026-08-18 (PREPARATION.md section 4, answer 2). The
 form must ask for the instance URL up front, as literally the first
 field, not bury it as a secondary/advanced option.
 
-SIDEBAR CONTENT SECTIONS -- NOT wrapped in ui.Card, from the FIRST DRAFT.
+SIDEBAR CONTENT -- NO CARDS ANYWHERE, updated 2026-08-20 per
+~/UI_INTERFACE_STANDARD.md's "left sidebar, no decorated cards" rule.
 
-Only the connect/connected block is a genuine Card (a single form/status
-widget, not a list). Any future section listing several items of the
-same kind (workflows, executions, tags) must render as a plain ui.Stack
-with a ui.Divider() before it -- no card padding/border/background per
-section. This is Vlad's standing rule (flagged after a Make.com Connector
-regression, see PREPARATION.md section 7) applied here from the start
-instead of fixed after the fact.
+Every section (connected status, workflows) is a plain ui.Stack, content
+stacked vertically and left-aligned, sections separated by ui.Divider()
+-- no Card border/background/shadow anywhere in this slot. Disconnect now
+lives in the "App settings" screen (panels_settings.py), not inline in
+the sidebar -- the sidebar only shows the connected summary line. The one
+secondary "App settings" button is always the LAST element at the bottom
+of the sidebar.
 """
 from __future__ import annotations
 
@@ -48,16 +50,21 @@ from app import ext
 import handlers as h
 
 
-def _connected_card(detail: str) -> ui.UINode:
-    return ui.Card(
-        title="n8n",
-        subtitle="Connected",
-        content=ui.Stack(direction="v", gap=2, children=[
-            ui.Text(detail, variant="caption"),
-            ui.Button("Disconnect", variant="danger", size="sm",
-                      on_click=ui.Call("disconnect_n8n")),
-        ]),
+def _settings_button() -> ui.UINode:
+    """The one required secondary entry point into the settings screen --
+    always the last element at the bottom of the sidebar."""
+    return ui.Button(
+        "App settings", variant="secondary", size="sm", full_width=True,
+        icon="settings", on_click=ui.Call("__panel__n8n_settings"),
     )
+
+
+def _connected_section(detail: str) -> ui.UINode:
+    """Plain content, no Card wrapper -- disconnect lives in App settings now."""
+    return ui.Stack(direction="v", gap=1, align="start", children=[
+        ui.Text("n8n", variant="body"),
+        ui.Text(detail, variant="caption"),
+    ])
 
 
 def _workflow_row(w) -> ui.UINode:
@@ -83,35 +90,31 @@ def _workflows_section(workflows: list) -> ui.UINode:
     return ui.Stack(direction="v", gap=2, children=children)
 
 
-def _connect_card() -> ui.UINode:
-    return ui.Card(
-        title="Connect n8n",
-        subtitle="Bring your own n8n instance -- self-hosted or n8n Cloud",
-        content=ui.Stack(direction="v", gap=3, children=[
-            ui.Text(
-                "Paste your instance's URL and API key below. Both are "
-                "verified together before saving. This key gives full "
-                "access to your instance's workflows, executions AND "
-                "credentials -- only connect an account you're comfortable "
-                "granting that to.",
-                variant="caption",
-            ),
-            ui.Stack(direction="h", gap=2, align="center", children=[
-                ui.Button("How do I get an API key?", variant="ghost", size="sm",
-                          icon="HelpCircle",
-                          on_click=ui.Call("__panel__n8n_connect_help")),
-            ]),
-            ui.Form(
-                action="connect_n8n",
-                submit_label="Verify and connect",
-                children=[
-                    ui.Input(param_name="base_url",
-                              placeholder="https://n8n.example.com"),
-                    ui.Password(param_name="api_key", placeholder="n8n API key"),
-                ],
-            ),
-        ]),
-    )
+def _connect_section() -> ui.UINode:
+    """Plain content, no Card wrapper -- shown only while not connected."""
+    return ui.Stack(direction="v", gap=3, align="start", children=[
+        ui.Text("Connect n8n", variant="heading"),
+        ui.Text(
+            "Bring your own n8n instance -- self-hosted or n8n Cloud. Paste "
+            "your instance's URL and API key below. Both are verified "
+            "together before saving. This key gives full access to your "
+            "instance's workflows, executions AND credentials -- only "
+            "connect an account you're comfortable granting that to.",
+            variant="caption",
+        ),
+        ui.Button("How do I get an API key?", variant="ghost", size="sm",
+                  icon="HelpCircle",
+                  on_click=ui.Call("__panel__n8n_connect_help")),
+        ui.Form(
+            action="connect_n8n",
+            submit_label="Verify and connect",
+            children=[
+                ui.Input(param_name="base_url",
+                          placeholder="https://n8n.example.com"),
+                ui.Password(param_name="api_key", placeholder="n8n API key"),
+            ],
+        ),
+    ])
 
 
 @ext.panel("n8n_connect", slot="left", title="n8n", icon="🔗",
@@ -124,14 +127,16 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
                         subtitle="Manage your n8n workflows from Imperal")
 
     if not connected:
-        return ui.Stack(direction="v", gap=4, children=[
+        return ui.Stack(direction="v", gap=4, align="start", children=[
             header,
-            _connect_card(),
+            _connect_section(),
             ui.Alert(
                 title="Not connected yet",
                 message="Connect your n8n instance to see and manage your workflows.",
                 type="info",
             ),
+            ui.Divider(),
+            _settings_button(),
         ])
 
     workflows: list = []
@@ -142,12 +147,14 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
         except nc.ProviderError:
             workflows = []
 
-    return ui.Stack(direction="v", gap=4, children=[
+    return ui.Stack(direction="v", gap=4, align="start", children=[
         header,
-        _connected_card(f"Instance: {base_url}"),
+        _connected_section(f"Instance: {base_url}"),
         ui.Divider(),
         ui.Text("Workflows", variant="subtitle"),
         _workflows_section(workflows),
+        ui.Divider(),
+        _settings_button(),
     ])
 
 
