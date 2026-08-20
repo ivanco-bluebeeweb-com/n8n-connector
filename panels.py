@@ -112,10 +112,15 @@ def _connect_section() -> ui.UINode:
             action="connect_n8n",
             submit_label="Verify and connect",
             children=[
-                ui.Input(param_name="base_url", label="Instance URL",
-                          placeholder="https://n8n.example.com"),
-                ui.Password(param_name="api_key", label="API key",
-                             placeholder="n8n API key"),
+                ui.Stack(direction="v", gap=1, children=[
+                    ui.Text("Instance URL", variant="caption"),
+                    ui.Input(param_name="base_url",
+                              placeholder="https://n8n.example.com"),
+                ]),
+                ui.Stack(direction="v", gap=1, children=[
+                    ui.Text("API key", variant="caption"),
+                    ui.Password(param_name="api_key", placeholder="n8n API key"),
+                ]),
             ],
         ),
     ])
