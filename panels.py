@@ -188,3 +188,18 @@ async def n8n_connect_help(ctx, **kwargs) -> object:
         confirm_label="",
         cancel_label="Close",
     )
+
+
+@ext.panel("n8n_center", slot="center", title="n8n", icon="🔗")
+async def n8n_center_panel(ctx, **kwargs) -> object:
+    """Base (non-overlay) center panel -- per UI_INTERFACE_STANDARD.md
+    (2026-08-20): this app has no list/detail content of its own to show
+    in the center by default (everything lives in the sidebar; center is
+    only ever used for settings/help via center_overlay). Without this
+    panel the center slot would simply render nothing when connected and
+    nothing else is open. Text is the shared canonical wording -- must
+    stay identical across every app in this situation, not app-specific."""
+    return ui.Empty(
+        message="Nothing to show here -- this app is managed entirely from the sidebar.",
+        icon="👈",
+    )
