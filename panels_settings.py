@@ -20,7 +20,6 @@ def _connection_section(base_url: str, connected: bool) -> ui.UINode:
     if not connected:
         return ui.Stack(direction="v", gap=2, align="stretch", children=[
             ui.Text("Connection", variant="heading"),
-            ui.Text("Not connected.", variant="caption"),
             ui.Text(
                 "Paste your instance's URL and API key below. Both are "
                 "verified together before saving.",

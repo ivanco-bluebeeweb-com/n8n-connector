@@ -94,17 +94,12 @@ def _workflows_section(workflows: list) -> ui.UINode:
 
 def _connect_section() -> ui.UINode:
     """Plain content, no Card wrapper -- shown only while not connected.
-    Stretched full-width per UI_INTERFACE_STANDARD.md (2026-08-20): the
-    full-access warning lives ONLY in n8n_connect_help's modal now --
-    repeating it here would duplicate that instruction."""
+    Stretched full-width per UI_INTERFACE_STANDARD.md (2026-08-20). No
+    intro heading/description text here -- that instruction lives ONLY in
+    n8n_connect_help's modal (button below opens it); repeating it here,
+    or an extra "Not connected yet" Alert next to an already-empty form,
+    would duplicate what the empty form itself already communicates."""
     return ui.Stack(direction="v", gap=3, align="stretch", children=[
-        ui.Text("Connect n8n", variant="heading"),
-        ui.Text(
-            "Bring your own n8n instance -- self-hosted or n8n Cloud. Paste "
-            "your instance's URL and API key below; both are verified "
-            "together before saving.",
-            variant="caption",
-        ),
         ui.Button("How do I get an API key?", variant="ghost", size="sm",
                   icon="HelpCircle",
                   on_click=ui.Call("__panel__n8n_connect_help")),
@@ -139,11 +134,6 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
         return ui.Stack(direction="v", gap=4, align="stretch", children=[
             header,
             _connect_section(),
-            ui.Alert(
-                title="Not connected yet",
-                message="Connect your n8n instance to see and manage your workflows.",
-                type="info",
-            ),
             ui.Divider(),
             _settings_button(),
         ])
