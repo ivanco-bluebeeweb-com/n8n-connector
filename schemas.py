@@ -27,6 +27,13 @@ class ConnectN8nParams(BaseModel):
             "(self-hosted) or https://your-org.app.n8n.cloud (n8n Cloud)."
         ),
     )
+    allow_private_http: bool = Field(
+        False,
+        description=(
+            "Set true to allow a plain http:// base_url for a self-hosted "
+            "instance on localhost or a private network. HTTPS is required otherwise."
+        ),
+    )
     api_key: str = Field(
         "",
         description="n8n API key -- create it in your instance: Settings -> n8n API -> Create an API key.",

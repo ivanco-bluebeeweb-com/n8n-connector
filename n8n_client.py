@@ -30,13 +30,57 @@ fixable cause that must not be reported as "wrong key".
 """
 from __future__ import annotations
 
+import ipaddress
+from urllib.parse import urlparse
+
 API_VERSION = "v1"
 
 
 class ProviderError(Exception):
-    def __init__(self, message: str, code: str):
+    def __init__(self, message: str, code: str, retryable: bool = False):
         super().__init__(message)
         self.code = code
+        self.retryable = retryable
+
+
+def normalize_base_url(value: str, allow_private_http: bool = False) -> str:
+    """Validate a user-supplied self-hosted base_url before it is ever used in a
+    request (AUTH_AND_CREDENTIALS_STANDARD.md Part C / task #2368). Same shape
+    as Home Assistant Connector's home_assistant_client.normalize_base_url --
+    requires HTTPS by default; HTTP is accepted only when the caller explicitly
+    opts in AND the host resolves to localhost or a private/loopback address,
+    so a self-hosted n8n instance on a private network still works while a
+    bare unchecked base_url can't be pointed at an arbitrary internal host."""
+    raw = value.strip().rstrip("/")
+    parsed = urlparse(raw)
+    if not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise ProviderError(
+            "n8n base URL must contain only a scheme, host and optional port/path.",
+            code="N8N_INVALID_BASE_URL",
+        )
+    if parsed.scheme == "https":
+        return raw
+    if parsed.scheme != "http" or not allow_private_http:
+        raise ProviderError(
+            "Use HTTPS, or explicitly allow HTTP for a private-network n8n instance.",
+            code="N8N_INVALID_BASE_URL",
+        )
+    host = parsed.hostname.lower()
+    if host == "localhost":
+        return raw
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        raise ProviderError(
+            "HTTP is allowed only for localhost or a literal private IP address.",
+            code="N8N_INVALID_BASE_URL",
+        )
+    if not (address.is_private or address.is_loopback):
+        raise ProviderError(
+            "HTTP is allowed only for a private-network or localhost address.",
+            code="N8N_INVALID_BASE_URL",
+        )
+    return raw
 
 
 def _normalize_base_url(base_url: str) -> str:
@@ -81,6 +125,18 @@ def _check_status(resp, action: str):
         )
     if resp.status_code == 404:
         raise ProviderError(f"Not found while trying to {action}.", "N8N_NOT_FOUND")
+    if resp.status_code == 429:
+        raise ProviderError(
+            f"n8n's own rate limit was hit while trying to {action}. Try again shortly.",
+            "N8N_RATE_LIMITED", retryable=True,
+        )
+    if resp.status_code >= 500:
+        detail = _error_detail(resp)
+        raise ProviderError(
+            f"n8n's server had a problem while trying to {action}"
+            f"{f': {detail}' if detail else f' (HTTP {resp.status_code})'}.",
+            "N8N_BACKEND_ERROR", retryable=True,
+        )
     if resp.status_code >= 400:
         detail = _error_detail(resp)
         raise ProviderError(

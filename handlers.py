@@ -156,9 +156,9 @@ def _user_entity(u: dict) -> N8nUser:
 async def connect_n8n(ctx, params: ConnectN8nParams) -> ActionResult:
     """Validate base_url+api_key against the user's own n8n instance, then
     persist both as secrets so every later call reuses them."""
-    base_url = params.base_url.strip().rstrip("/")
+    raw_base_url = params.base_url.strip().rstrip("/")
     api_key = params.api_key.strip()
-    if not base_url:
+    if not raw_base_url:
         return ActionResult.error(
             "Please provide your n8n instance's base URL (e.g. https://n8n.example.com).",
             code="N8N_MISSING_BASE_URL",
@@ -170,9 +170,13 @@ async def connect_n8n(ctx, params: ConnectN8nParams) -> ActionResult:
             code="N8N_MISSING_API_KEY",
         )
     try:
+        base_url = nc.normalize_base_url(raw_base_url, params.allow_private_http)
+    except nc.ProviderError as exc:
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
+    try:
         await nc.check_connection(ctx, base_url, api_key)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
 
     await ctx.secrets.set("n8n_base_url", base_url)
     await ctx.secrets.set("n8n_api_key", api_key)
@@ -251,7 +255,7 @@ async def list_n8n_workflows(ctx, params: ListWorkflowsParams) -> ActionResult:
             limit=params.limit, cursor=params.cursor or None,
         )
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_workflow_entity(w) for w in rows]
     summary = f"{len(items)} workflow(s)."
     if next_cursor:
@@ -274,7 +278,7 @@ async def get_n8n_workflow(ctx, params: GetWorkflowParams) -> ActionResult:
     try:
         w = await nc.get_workflow(ctx, base_url, api_key, params.workflow_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_workflow_entity(w), summary=f"Workflow '{w.get('name')}'.")
 
 
@@ -296,7 +300,7 @@ async def create_n8n_workflow(ctx, params: CreateWorkflowParams) -> ActionResult
     try:
         w = await nc.create_workflow(ctx, base_url, api_key, payload)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_workflow_entity(w), summary=f"Workflow '{params.name}' created.")
 
 
@@ -325,7 +329,7 @@ async def update_n8n_workflow(ctx, params: UpdateWorkflowParams) -> ActionResult
         }
         w = await nc.update_workflow(ctx, base_url, api_key, params.workflow_id, payload)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_workflow_entity(w), summary=f"Workflow '{w.get('name')}' updated.")
 
 
@@ -350,7 +354,7 @@ async def delete_n8n_workflow(ctx, params: DeleteWorkflowParams) -> ActionResult
     try:
         await nc.delete_workflow(ctx, base_url, api_key, params.workflow_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         DeleteResult(deleted=True), summary=f"Workflow {params.workflow_id} deleted.",
     )
@@ -374,7 +378,7 @@ async def publish_n8n_workflow(ctx, params: PublishWorkflowParams) -> ActionResu
     try:
         w = await nc.publish_workflow(ctx, base_url, api_key, params.workflow_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         WorkflowActionResult(workflow_id=params.workflow_id, active=bool(w.get("active"))),
         summary=f"Workflow {params.workflow_id} published.",
@@ -397,7 +401,7 @@ async def unpublish_n8n_workflow(ctx, params: UnpublishWorkflowParams) -> Action
     try:
         w = await nc.unpublish_workflow(ctx, base_url, api_key, params.workflow_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         WorkflowActionResult(workflow_id=params.workflow_id, active=bool(w.get("active"))),
         summary=f"Workflow {params.workflow_id} unpublished.",
@@ -432,7 +436,7 @@ async def run_n8n_workflow(ctx, params: RunWorkflowParams) -> ActionResult:
     try:
         result = await nc.run_workflow(ctx, base_url, api_key, params.workflow_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         WorkflowActionResult(
             workflow_id=params.workflow_id,
@@ -468,7 +472,7 @@ async def list_n8n_executions(ctx, params: ListExecutionsParams) -> ActionResult
             limit=params.limit, cursor=params.cursor or None,
         )
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_execution_entity(e) for e in rows]
     summary = f"{len(items)} execution(s)."
     if next_cursor:
@@ -491,7 +495,7 @@ async def get_n8n_execution(ctx, params: GetExecutionParams) -> ActionResult:
     try:
         e = await nc.get_execution(ctx, base_url, api_key, int(params.execution_id))
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     entity = _execution_entity(e)
     if params.include_data:
         entity.run_data = e.get("data") or {}
@@ -520,7 +524,7 @@ async def delete_n8n_execution(ctx, params: DeleteExecutionParams) -> ActionResu
     try:
         await nc.delete_execution(ctx, base_url, api_key, int(params.execution_id))
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         DeleteResult(deleted=True),
         summary=f"Execution {params.execution_id} deleted.",
@@ -543,7 +547,7 @@ async def retry_n8n_execution(ctx, params: RetryExecutionParams) -> ActionResult
     try:
         result = await nc.retry_execution(ctx, base_url, api_key, int(params.execution_id))
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         ExecutionActionResult(execution_id=params.execution_id, status=str(result.get("status") or "retried")),
         summary=f"Execution {params.execution_id} retried.",
@@ -566,7 +570,7 @@ async def stop_n8n_execution(ctx, params: StopExecutionParams) -> ActionResult:
     try:
         result = await nc.stop_execution(ctx, base_url, api_key, int(params.execution_id))
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         ExecutionActionResult(execution_id=params.execution_id, status=str(result.get("status") or "stopped")),
         summary=f"Execution {params.execution_id} stopped.",
@@ -590,7 +594,7 @@ async def stop_n8n_executions(ctx, params: StopExecutionsParams) -> ActionResult
     try:
         await nc.stop_executions(ctx, base_url, api_key, ids)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         BulkExecutionResult(count=len(ids)),
         summary=f"Stopped {len(ids)} execution(s).",
@@ -622,7 +626,7 @@ async def list_n8n_credentials(ctx, params: NoParams) -> ActionResult:
     try:
         rows = await nc.list_credentials(ctx, base_url, api_key)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_credential_entity(c) for c in rows]
     return ActionResult.success(N8nCredentialList(items=items), summary=f"{len(items)} credential(s).")
 
@@ -643,7 +647,7 @@ async def get_n8n_credential_schema(ctx, params: GetCredentialSchemaParams) -> A
     try:
         schema = await nc.get_credential_schema(ctx, base_url, api_key, params.credential_type_name)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     import json
     return ActionResult.success(
         CredentialSchema(id=params.credential_type_name, title=params.credential_type_name, fields_json=json.dumps(schema)),
@@ -674,7 +678,7 @@ async def create_n8n_credential(ctx, params: CreateCredentialParams) -> ActionRe
             {"name": params.name, "type": params.credential_type_name, "data": params.data},
         )
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_credential_entity(c), summary=f"Credential '{params.name}' created.")
 
 
@@ -702,7 +706,7 @@ async def delete_n8n_credential(ctx, params: DeleteCredentialParams) -> ActionRe
     try:
         await nc.delete_credential(ctx, base_url, api_key, params.credential_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         DeleteResult(deleted=True),
         summary=f"Credential {params.credential_id} deleted.",
@@ -729,7 +733,7 @@ async def list_n8n_tags(ctx, params: ListTagsParams) -> ActionResult:
     try:
         rows, next_cursor = await nc.list_tags(ctx, base_url, api_key, limit=params.limit, cursor=params.cursor or None)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_tag_entity(t) for t in rows]
     summary = f"{len(items)} tag(s)."
     if next_cursor:
@@ -753,7 +757,7 @@ async def create_n8n_tag(ctx, params: CreateTagParams) -> ActionResult:
     try:
         t = await nc.create_tag(ctx, base_url, api_key, params.name)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_tag_entity(t), summary=f"Tag '{params.name}' created.")
 
 
@@ -773,7 +777,7 @@ async def update_n8n_tag(ctx, params: UpdateTagParams) -> ActionResult:
     try:
         t = await nc.update_tag(ctx, base_url, api_key, params.tag_id, params.name)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_tag_entity(t), summary=f"Tag renamed to '{params.name}'.")
 
 
@@ -799,7 +803,7 @@ async def delete_n8n_tag(ctx, params: DeleteTagParams) -> ActionResult:
     try:
         await nc.delete_tag(ctx, base_url, api_key, params.tag_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         DeleteResult(deleted=True),
         summary=f"Tag {params.tag_id} deleted.",
@@ -826,7 +830,7 @@ async def get_n8n_workflow_tags(ctx, params: GetWorkflowTagsParams) -> ActionRes
     try:
         rows = await nc.get_workflow_tags(ctx, base_url, api_key, params.workflow_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_tag_entity(t) for t in rows]
     return ActionResult.success(N8nTagList(items=items), summary=f"{len(items)} tag(s) on workflow {params.workflow_id}.")
 
@@ -848,7 +852,7 @@ async def update_n8n_workflow_tags(ctx, params: UpdateWorkflowTagsParams) -> Act
     try:
         rows = await nc.update_workflow_tags(ctx, base_url, api_key, params.workflow_id, params.tag_ids)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_tag_entity(t) for t in rows]
     return ActionResult.success(N8nTagList(items=items), summary=f"Workflow {params.workflow_id} now has {len(items)} tag(s).")
 
@@ -868,7 +872,7 @@ async def list_n8n_workflow_versions(ctx, params: ListWorkflowVersionsParams) ->
     try:
         rows = await nc.list_workflow_versions(ctx, base_url, api_key, params.workflow_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_workflow_version_entity(v) for v in rows]
     return ActionResult.success(N8nWorkflowVersionList(items=items), summary=f"{len(items)} version(s).")
 
@@ -888,7 +892,7 @@ async def get_n8n_workflow_version(ctx, params: GetWorkflowVersionParams) -> Act
     try:
         v = await nc.get_workflow_version(ctx, base_url, api_key, params.workflow_id, params.version_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_workflow_version_entity(v), summary=f"Version {params.version_id}.")
 
 
@@ -908,7 +912,7 @@ async def unarchive_n8n_workflow(ctx, params: UnarchiveWorkflowParams) -> Action
     try:
         w = await nc.unarchive_workflow(ctx, base_url, api_key, params.workflow_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         WorkflowActionResult(workflow_id=params.workflow_id, active=bool(w.get("active"))),
         summary=f"Workflow {params.workflow_id} unarchived.",
@@ -931,7 +935,7 @@ async def transfer_n8n_workflow(ctx, params: TransferWorkflowParams) -> ActionRe
     try:
         await nc.transfer_workflow(ctx, base_url, api_key, params.workflow_id, params.destination_project_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         WorkflowActionResult(workflow_id=params.workflow_id, active=True),
         summary=f"Workflow {params.workflow_id} transferred to project {params.destination_project_id}.",
@@ -958,7 +962,7 @@ async def get_n8n_execution_tags(ctx, params: GetExecutionTagsParams) -> ActionR
     try:
         rows = await nc.get_execution_tags(ctx, base_url, api_key, params.execution_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_tag_entity(t) for t in rows]
     return ActionResult.success(N8nTagList(items=items), summary=f"{len(items)} tag(s) on execution {params.execution_id}.")
 
@@ -979,7 +983,7 @@ async def update_n8n_execution_tags(ctx, params: UpdateExecutionTagsParams) -> A
     try:
         rows = await nc.update_execution_tags(ctx, base_url, api_key, params.execution_id, params.tag_ids)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_tag_entity(t) for t in rows]
     return ActionResult.success(N8nTagList(items=items), summary=f"Execution {params.execution_id} now has {len(items)} tag(s).")
 
@@ -1005,7 +1009,7 @@ async def get_n8n_credential(ctx, params: GetCredentialParams) -> ActionResult:
     try:
         c = await nc.get_credential(ctx, base_url, api_key, params.credential_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_credential_entity(c), summary=f"Credential '{c.get('name')}'.")
 
 
@@ -1031,7 +1035,7 @@ async def update_n8n_credential(ctx, params: UpdateCredentialParams) -> ActionRe
             data=params.data, is_partial_data=params.is_partial_data,
         )
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_credential_entity(c), summary=f"Credential {params.credential_id} updated.")
 
 
@@ -1050,7 +1054,7 @@ async def test_n8n_credential(ctx, params: TestCredentialParams) -> ActionResult
     try:
         result = await nc.test_credential(ctx, base_url, api_key, params.credential_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     status = str(result.get("status") or "")
     return ActionResult.success(
         CredentialTestResult(id=params.credential_id, title=f"Test {params.credential_id}",
@@ -1075,7 +1079,7 @@ async def transfer_n8n_credential(ctx, params: TransferCredentialParams) -> Acti
     try:
         await nc.transfer_credential(ctx, base_url, api_key, params.credential_id, params.destination_project_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(
         DeleteResult(deleted=False),
         summary=f"Credential {params.credential_id} transferred to project {params.destination_project_id}.",
@@ -1103,7 +1107,7 @@ async def list_n8n_variables(ctx, params: ListVariablesParams) -> ActionResult:
     try:
         rows, next_cursor = await nc.list_variables(ctx, base_url, api_key, limit=params.limit, cursor=params.cursor or None)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_variable_entity(v) for v in rows]
     summary = f"{len(items)} variable(s)."
     if next_cursor:
@@ -1127,7 +1131,7 @@ async def create_n8n_variable(ctx, params: CreateVariableParams) -> ActionResult
     try:
         v = await nc.create_variable(ctx, base_url, api_key, params.key, params.value)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_variable_entity(v), summary=f"Variable '{params.key}' created.")
 
 
@@ -1147,7 +1151,7 @@ async def update_n8n_variable(ctx, params: UpdateVariableParams) -> ActionResult
     try:
         v = await nc.update_variable(ctx, base_url, api_key, params.variable_id, params.key, params.value, params.project_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_variable_entity(v), summary=f"Variable {params.variable_id} updated.")
 
 
@@ -1172,7 +1176,7 @@ async def delete_n8n_variable(ctx, params: DeleteVariableParams) -> ActionResult
     try:
         await nc.delete_variable(ctx, base_url, api_key, params.variable_id)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(DeleteResult(deleted=True), summary=f"Variable {params.variable_id} deleted.")
 
 
@@ -1201,7 +1205,7 @@ async def list_n8n_users(ctx, params: ListUsersParams) -> ActionResult:
             include_role=params.include_role,
         )
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_user_entity(u) for u in rows]
     summary = f"{len(items)} user(s)."
     if next_cursor:
@@ -1226,7 +1230,7 @@ async def create_n8n_users(ctx, params: CreateUsersParams) -> ActionResult:
     try:
         rows = await nc.create_users(ctx, base_url, api_key, params.invites)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     items = [_user_entity(u) for u in rows]
     return ActionResult.success(N8nUserList(items=items), summary=f"{len(items)} user(s) invited.")
 
@@ -1246,7 +1250,7 @@ async def get_n8n_user(ctx, params: GetUserParams) -> ActionResult:
     try:
         u = await nc.get_user(ctx, base_url, api_key, params.id_or_email, include_role=params.include_role)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_user_entity(u), summary=f"User '{u.get('email')}'.")
 
 
@@ -1272,7 +1276,7 @@ async def delete_n8n_user(ctx, params: DeleteUserParams) -> ActionResult:
     try:
         await nc.delete_user(ctx, base_url, api_key, params.id_or_email)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(DeleteResult(deleted=True), summary=f"User {params.id_or_email} deleted.")
 
 
@@ -1293,7 +1297,7 @@ async def change_n8n_user_role(ctx, params: ChangeUserRoleParams) -> ActionResul
     try:
         u = await nc.change_user_role(ctx, base_url, api_key, params.id_or_email, params.new_role_name)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     return ActionResult.success(_user_entity(u), summary=f"User {params.id_or_email} role changed to {params.new_role_name}.")
 
 
@@ -1319,7 +1323,7 @@ async def pull_n8n_source_control(ctx, params: PullSourceControlParams) -> Actio
     try:
         result = await nc.pull_source_control(ctx, base_url, api_key, force=params.force)
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     variables = result.get("variables") or {}
     credentials = result.get("credentials") or []
     workflows = result.get("workflows") or []
@@ -1358,7 +1362,7 @@ async def generate_n8n_audit(ctx, params: GenerateAuditParams) -> ActionResult:
             categories=params.categories or None,
         )
     except nc.ProviderError as exc:
-        return ActionResult.error(str(exc), code=exc.code)
+        return ActionResult.error(str(exc), retryable=getattr(exc, "retryable", False), code=exc.code)
     import json as _json
     return ActionResult.success(
         AuditReport(report_json=_json.dumps(report)),
