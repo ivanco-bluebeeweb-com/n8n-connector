@@ -252,7 +252,11 @@ async def test_create_workflow_fails_then_succeeds_on_retry(ctx_connected):
     ctx_connected.http.mock_post("/api/v1/workflows", {"message": "internal error"}, status=500)
     r1 = await h.create_n8n_workflow(ctx_connected, CreateWorkflowParams(name="Lead Sync"))
     assert r1.error is not None
-    assert r1.error_code == "N8N_API_ERROR"
+    # A 500 is a backend/server-side failure, distinct from a generic 4xx API
+    # error -- n8n_client.py raises N8N_BACKEND_ERROR (retryable) for 5xx and
+    # reserves N8N_API_ERROR for other 4xx statuses. This assertion was out of
+    # sync with that distinction.
+    assert r1.error_code == "N8N_BACKEND_ERROR"
 
     # Recovery: same call, backend now healthy. MockHTTP._find matches the
     # FIRST registered entry for a given method+pattern, so the stale 500
