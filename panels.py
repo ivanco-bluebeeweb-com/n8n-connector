@@ -153,6 +153,9 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
         ui.Text("Workflows", variant="subtitle"),
         _workflows_section(workflows),
         ui.Divider(),
+        ui.Button("View workflow overview", variant="primary", size="sm", full_width=True,
+                  icon="LayoutDashboard", on_click=ui.Call("__panel__n8n_center")),
+        ui.Divider(),
         _settings_button(),
     ])
 
@@ -201,7 +204,28 @@ async def n8n_center_panel(ctx, **kwargs) -> object:
     empty (not a caching issue) until center_overlay=True is set. Text is
     the shared canonical wording -- must stay identical across every app
     in this situation, not app-specific."""
-    return ui.Empty(
-        message="Nothing to show here -- this app is managed entirely from the sidebar.",
-        icon="👈",
-    )
+    base_url, api_key = await h._get_credentials(ctx)
+    if not (base_url and api_key):
+        return ui.Empty(message="Connect n8n from the sidebar to see it here.", icon="🔗")
+
+    from schemas import ListWorkflowsParams
+    result = await h.list_n8n_workflows(ctx, ListWorkflowsParams())
+    body: list[ui.UINode] = [ui.Text("Workflow overview", variant="subtitle")]
+    if result.success and result.data and result.data.items:
+        items = result.data.items
+        active = sum(1 for w in items if w.active)
+        body.append(ui.Stats(children=[
+            ui.Stat(label="Total", value=str(len(items))),
+            ui.Stat(label="Active", value=str(active)),
+            ui.Stat(label="Inactive", value=str(len(items) - active)),
+        ]))
+        for w in items[:15]:
+            color = "green" if w.active else "gray"
+            body.append(ui.Stack(direction="h", gap=2, align="center", children=[
+                ui.Badge(label="ACTIVE" if w.active else "INACTIVE", color=color),
+                ui.Text(w.title, variant="body"),
+            ]))
+    else:
+        body.append(ui.Text("No workflows found, or not yet connected.", variant="caption"))
+
+    return ui.Stack(direction="v", gap=3, align="stretch", children=body)
