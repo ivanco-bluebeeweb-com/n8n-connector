@@ -1,6 +1,6 @@
 {
   "manifest_schema_version": 3,
-  "sdk_version": "5.9.12",
+  "sdk_version": "5.13.0",
   "app_id": "n8n-connector",
   "version": "0.1.0",
   "name": "n8n",
@@ -29,6 +29,12 @@
             "description": "Base URL of your n8n instance, e.g. https://n8n.example.com (self-hosted) or https://your-org.app.n8n.cloud (n8n Cloud).",
             "title": "Base Url",
             "type": "string"
+          },
+          "allow_private_http": {
+            "default": false,
+            "description": "Set true to allow a plain http:// base_url for a self-hosted instance on localhost or a private network. HTTPS is required otherwise.",
+            "title": "Allow Private Http",
+            "type": "boolean"
           },
           "api_key": {
             "default": "",
@@ -1270,7 +1276,7 @@
     },
     {
       "name": "run_n8n_workflow",
-      "description": "Run an n8n workflow right now by id. This endpoint is recent in n8n's own API (added late 2025) -- older self-hosted instances may not have it; if it fails, trigger the workflow via its own Webhook node URL instead.",
+      "description": "Run an n8n workflow right now by id. This endpoint is recent in n8n's own API (added late 2025) -- older self-hosted instances may not have it; if it fails, trigger the workflow via its own Webhook node URL instead. This executes the workflow's real actions immediately -- there is no dry-run or undo.",
       "action_type": "destructive",
       "chain_callable": true,
       "effects": [
@@ -1498,6 +1504,11 @@
                 "default": "",
                 "title": "Mode",
                 "type": "string"
+              },
+              "run_data": {
+                "additionalProperties": true,
+                "title": "Run Data",
+                "type": "object"
               }
             },
             "title": "N8nExecution",
@@ -1665,6 +1676,11 @@
             "default": "",
             "title": "Mode",
             "type": "string"
+          },
+          "run_data": {
+            "additionalProperties": true,
+            "title": "Run Data",
+            "type": "object"
           }
         },
         "title": "N8nExecution",
@@ -6244,6 +6260,24 @@
       "title": "How to get an n8n API key",
       "tree": {},
       "icon": "",
+      "refresh": "manual",
+      "center_overlay": true
+    },
+    {
+      "panel_id": "n8n_center",
+      "slot": "center",
+      "title": "n8n",
+      "tree": {},
+      "icon": "🔗",
+      "refresh": "manual",
+      "center_overlay": true
+    },
+    {
+      "panel_id": "n8n_settings",
+      "slot": "center",
+      "title": "App settings",
+      "tree": {},
+      "icon": "⚙️",
       "refresh": "manual",
       "center_overlay": true
     }
