@@ -70,6 +70,8 @@ class N8nWorkflow(sdl.Entity):
 
 
 class N8nWorkflowList(sdl.EntityList[N8nWorkflow]):
+    id: str = ""
+    title: str = ""
     pass
 
 
@@ -146,6 +148,8 @@ class N8nExecution(sdl.Entity):
 
 
 class N8nExecutionList(sdl.EntityList[N8nExecution]):
+    id: str = ""
+    title: str = ""
     pass
 
 
@@ -204,6 +208,8 @@ class N8nCredential(sdl.Entity):
 
 
 class N8nCredentialList(sdl.EntityList[N8nCredential]):
+    id: str = ""
+    title: str = ""
     pass
 
 
@@ -248,6 +254,8 @@ class N8nTag(sdl.Entity):
 
 
 class N8nTagList(sdl.EntityList[N8nTag]):
+    id: str = ""
+    title: str = ""
     pass
 
 
@@ -298,6 +306,8 @@ class N8nWorkflowVersion(sdl.Entity):
 
 
 class N8nWorkflowVersionList(sdl.EntityList[N8nWorkflowVersion]):
+    id: str = ""
+    title: str = ""
     pass
 
 
@@ -380,6 +390,8 @@ class N8nVariable(sdl.Entity):
 
 
 class N8nVariableList(sdl.EntityList[N8nVariable]):
+    id: str = ""
+    title: str = ""
     pass
 
 
@@ -422,6 +434,8 @@ class N8nUser(sdl.Entity):
 
 
 class N8nUserList(sdl.EntityList[N8nUser]):
+    id: str = ""
+    title: str = ""
     pass
 
 
