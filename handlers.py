@@ -331,6 +331,7 @@ async def update_n8n_workflow(ctx, params: UpdateWorkflowParams) -> ActionResult
             "name": params.name or current.get("name"),
             "nodes": params.nodes if params.nodes is not None else current.get("nodes"),
             "connections": params.connections if params.connections is not None else current.get("connections"),
+            "settings": current.get("settings") or {},  # required by n8n's PUT /workflows/{id} schema
         }
         w = await nc.update_workflow(ctx, base_url, api_key, params.workflow_id, payload)
     except nc.ProviderError as exc:
