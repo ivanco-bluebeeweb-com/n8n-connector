@@ -296,7 +296,12 @@ async def create_n8n_workflow(ctx, params: CreateWorkflowParams) -> ActionResult
     base_url, api_key = await _get_credentials(ctx)
     if not (base_url and api_key):
         return _not_connected()
-    payload = {"name": params.name, "nodes": params.nodes, "connections": params.connections}
+    payload = {
+        "name": params.name,
+        "nodes": params.nodes,
+        "connections": params.connections,
+        "settings": {},  # required by n8n's POST /workflows schema
+    }
     try:
         w = await nc.create_workflow(ctx, base_url, api_key, payload)
     except nc.ProviderError as exc:
