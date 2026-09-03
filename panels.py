@@ -3,6 +3,9 @@
 SKETCH, updated 2026-08-20 to the current no-card sidebar shape:
   ui.Stack (v, gap=4)
     ui.Header
+    ui.Button("Connect n8n Instance (SSO / API)", variant="primary", size="sm", icon="login"),
+    ui.Divider(),
+    ui.Text("Or connect via API Key & Base URL", variant="caption"),
     [not connected] _connect_section() -- plain content, ui.Form(connect_n8n)
     [connected]     _connected_section() -- plain text, then workflows list
     ui.Divider()
@@ -56,8 +59,7 @@ def _settings_button() -> ui.UINode:
     """The one required secondary entry point into the settings screen --
     always the last element at the bottom of the sidebar."""
     return ui.Button(
-        "App settings", variant="secondary", size="sm", full_width=True,
-        icon="settings", on_click=ui.Call("__panel__n8n_settings"),
+        "App settings", variant="secondary", size="sm", icon="settings", on_click=ui.Call("__panel__n8n_settings"),
     )
 
 
@@ -153,8 +155,7 @@ async def n8n_connect_panel(ctx, **kwargs) -> object:
         ui.Text("Workflows", variant="subtitle"),
         _workflows_section(workflows),
         ui.Divider(),
-        ui.Button("View workflow overview", variant="primary", size="sm", full_width=True,
-                  icon="LayoutDashboard", on_click=ui.Call("__panel__n8n_center")),
+        ui.Button("View workflow overview", variant="primary", size="sm", icon="LayoutDashboard", on_click=ui.Call("__panel__n8n_center")),
         ui.Divider(),
         _settings_button(),
     ])
